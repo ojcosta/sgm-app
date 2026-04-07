@@ -4,22 +4,20 @@ import os
 from datetime import datetime
 
 # --- CONFIGURAÇÕES INICIAIS ---
-st.set_page_config(page_title="SGM - Oficina Mecânica", layout="wide", page_icon="🔧")
+st.set_page_config(page_title="SGM - Oficina Pro", layout="wide", page_icon="💰")
 
 ARQUIVO_DADOS = "manutencoes.csv"
 
-# Listas de opções padronizadas (Otimização do preenchimento)
+# Listas de opções
 LISTA_SERVICOS = [
     "Troca de Óleo e Filtro",
-    "Revisão de Freios (Pastilhas/Discos)",
+    "Revisão de Freios",
     "Alinhamento e Balanceamento",
     "Suspensão e Amortecedores",
     "Sistema Elétrico / Bateria",
-    "Ar-condicionado (Carga/Limpeza)",
-    "Troca de Correia Dentada",
-    "Reparo de Motor",
-    "Troca de Pneus",
-    "Outros (Detalhar no Diagnóstico)"
+    "Ar-condicionado",
+    "Revisão Geral",
+    "Outros (Detalhar)"
 ]
 
 LISTA_MECANICOS = ["João Silva", "Ricardo Souza", "Ana Costa", "Carlos Oliveira"]
@@ -29,71 +27,87 @@ def carregar_dados():
     if os.path.exists(ARQUIVO_DADOS):
         return pd.read_csv(ARQUIVO_DADOS)
     else:
-        # Cria um DataFrame vazio com as colunas necessárias caso o arquivo não exista
-        return pd.DataFrame(columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Diagnóstico/Motivo', 'Responsável'])
+        return pd.DataFrame(columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
 
-# --- INTERFACE ---
-st.title("🔧 Sistema de Gestão de Manutenção - Oficina")
-st.markdown("---")
+# --- SISTEMA DE LOGIN ---
+def autenticacao():
+    if "logado" not in st.session_state:
+        st.session_state.logado = False
 
-# Menu Lateral para Navegação
-menu = ["Registrar Novo Serviço", "Histórico de Manutenções"]
-escolha = st.sidebar.selectbox("Selecione uma opção:", menu)
-
-df = carregar_dados()
-
-if escolha == "Registrar Novo Serviço":
-    st.subheader("📝 Registrar Nova Ordem de Serviço")
-    
-    with st.form("form_oficina", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            placa = st.text_input("Placa do Veículo (Ex: ABC1234)").upper()
-            veiculo = st.text_input("Modelo e Marca do Carro")
-            responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
-        
-        with col2:
-            data = st.date_input("Data do Registro", datetime.now())
-            # AQUI: Substituímos o campo de texto por uma lista selecionável
-            servico = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
-            motivo = st.text_area("Diagnóstico / Por que foi feito?")
-        
-        enviar = st.form_submit_button("Salvar Registro no Sistema")
-        
-        if enviar:
-            if placa and veiculo and motivo:
-                nova_linha = pd.DataFrame([[data, placa, veiculo, servico, motivo, responsavel]], 
-                                         columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Diagnóstico/Motivo', 'Responsável'])
-                
-                # Concatena e salva no arquivo CSV
-                df = pd.concat([df, nova_linha], ignore_index=True)
-                df.to_csv(ARQUIVO_DADOS, index=False)
-                
-                st.success(f"✅ Manutenção do veículo {placa} registrada com sucesso!")
-                st.balloons()
+    if not st.session_state.logado:
+        st.sidebar.title("Acesso Restrito")
+        usuario = st.sidebar.text_input("Usuário")
+        senha = st.sidebar.text_input("Senha", type="password")
+        if st.sidebar.button("Entrar"):
+            # Usuário e senha para o seu trabalho
+            if usuario == "oficina" and senha == "12345":
+                st.session_state.logado = True
+                st.rerun()
             else:
-                st.error("⚠️ Por favor, preencha todos os campos obrigatórios.")
+                st.sidebar.error("Usuário ou senha inválidos")
+        st.warning("Por favor, faça login no menu lateral para acessar o sistema.")
+        return False
+    return True
 
-elif escolha == "Histórico de Manutenções":
-    st.subheader("🔍 Consultar Registros de Manutenção")
+# --- EXECUÇÃO DO SISTEMA ---
+if autenticacao():
+    st.title("🔧 Gestão de Manutenção e Custos")
     
-    if df.empty:
-        st.warning("Ainda não existem registros no sistema.")
-    else:
-        # Filtro de busca por placa para o supervisor
-        busca_placa = st.text_input("Filtrar por Placa do Veículo:").upper()
+    # Botão de Logout no topo da barra lateral
+    if st.sidebar.button("Sair/Logout"):
+        st.session_state.logado = False
+        st.rerun()
+
+    menu = ["Registrar Novo Serviço", "Histórico e Financeiro"]
+    escolha = st.sidebar.selectbox("Navegação:", menu)
+
+    df = carregar_dados()
+
+    if escolha == "Registrar Novo Serviço":
+        st.subheader("📝 Nova Ordem de Serviço")
         
-        if busca_placa:
-            resultado = df[df['Placa'].str.contains(busca_placa)]
-            if not resultado.empty:
+        with st.form("form_oficina", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                placa = st.text_input("Placa do Veículo").upper()
+                veiculo = st.text_input("Modelo/Marca")
+                responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
+            
+            with col2:
+                data = st.date_input("Data", datetime.now())
+                servico = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
+                # NOVO CAMPO: Custo do reparo
+                custo = st.number_input("Custo Total do Reparo (R$)", min_value=0.0, step=10.0, format="%.2f")
+            
+            motivo = st.text_area("Diagnóstico e Detalhes")
+            
+            enviar = st.form_submit_button("Salvar Registro")
+            
+            if enviar:
+                if placa and veiculo and motivo:
+                    nova_linha = pd.DataFrame([[data, placa, veiculo, servico, custo, motivo, responsavel]], 
+                                             columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
+                    
+                    df = pd.concat([df, nova_linha], ignore_index=True)
+                    df.to_csv(ARQUIVO_DADOS, index=False)
+                    st.success(f"✅ Registro salvo! Valor: R$ {custo:.2f}")
+                else:
+                    st.error("Preencha todos os campos obrigatórios.")
+
+    elif escolha == "Histórico e Financeiro":
+        st.subheader("🔍 Consulta de Histórico e Custos")
+        
+        if df.empty:
+            st.info("Nenhum dado registrado.")
+        else:
+            # Resumo Financeiro simples para o Supervisor
+            total_geral = df['Custo (R$)'].sum()
+            st.metric("Total Acumulado em Reparos", f"R$ {total_geral:.2f}")
+            
+            busca = st.text_input("Filtrar por Placa:").upper()
+            if busca:
+                resultado = df[df['Placa'].str.contains(busca)]
                 st.dataframe(resultado, use_container_width=True)
             else:
-                st.info("Nenhum registro encontrado para esta placa.")
-        else:
-            st.write("Exibindo todos os registros recentes:")
-            st.dataframe(df.sort_values(by='Data', ascending=False), use_container_width=True)
-
-# Rodapé simples
-st.sidebar.markdown("---")
-st.sidebar.info("Seja bem vindo(a), ao meu Projeto Acadêmico - Sistema de Otimização de Oficina | O que você está vendo é o início de algo grande")
+                st.dataframe(df.sort_values(by='Data', ascending=False), use_container_width=True)
