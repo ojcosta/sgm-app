@@ -49,7 +49,7 @@ def autenticacao():
             else:
                 st.sidebar.error("Usuário ou senha inválidos")
         
-        st.info("💡 Dica para o trabalho: Usuário: 'oficina' | Senha: '12345'")
+        st.info("💡 Insira o usuário e senha para logar")
         st.warning("Aguardando login para liberar as funcionalidades...")
         return False
     return True
