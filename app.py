@@ -96,4 +96,4 @@ elif escolha == "Histórico de Manutenções":
 
 # Rodapé simples
 st.sidebar.markdown("---")
-st.sidebar.info("Projeto Acadêmico - Sistema de Otimização de Oficina")
+st.sidebar.info("Seja bem vindo(a), ao meu Projeto Acadêmico - Sistema de Otimização de Oficina | O que você está vendo é o início de algo grande")
