@@ -14,7 +14,7 @@ def carregar_dados():
     if os.path.exists(ARQUIVO_DADOS):
         return pd.read_csv(ARQUIVO_DADOS)
     else:
-        return pd.DataFrame(columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Motivo', 'Responsável'])
+        return pd.DataFrame(columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Motivo/Defeito', 'Responsável'])
 
 # Interface
 st.title("🔧 Sistema de Gestão de Manutenção (SGM)")
