@@ -123,4 +123,4 @@ if autenticacao():
                 st.dataframe(df.sort_values(by='Data', ascending=False), use_container_width=True)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("Versão 3.0 - Atualizada com Financeiro")
+    st.sidebar.caption("Versão 3.0")
