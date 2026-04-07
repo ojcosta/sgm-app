@@ -68,4 +68,32 @@ if escolha == "Registrar Novo Serviço":
                 
                 # Concatena e salva no arquivo CSV
                 df = pd.concat([df, nova_linha], ignore_index=True)
-                df.to_csv(AR
+                df.to_csv(ARQUIVO_DADOS, index=False)
+                
+                st.success(f"✅ Manutenção do veículo {placa} registrada com sucesso!")
+                st.balloons()
+            else:
+                st.error("⚠️ Por favor, preencha todos os campos obrigatórios.")
+
+elif escolha == "Histórico de Manutenções":
+    st.subheader("🔍 Consultar Registros de Manutenção")
+    
+    if df.empty:
+        st.warning("Ainda não existem registros no sistema.")
+    else:
+        # Filtro de busca por placa para o supervisor
+        busca_placa = st.text_input("Filtrar por Placa do Veículo:").upper()
+        
+        if busca_placa:
+            resultado = df[df['Placa'].str.contains(busca_placa)]
+            if not resultado.empty:
+                st.dataframe(resultado, use_container_width=True)
+            else:
+                st.info("Nenhum registro encontrado para esta placa.")
+        else:
+            st.write("Exibindo todos os registros recentes:")
+            st.dataframe(df.sort_values(by='Data', ascending=False), use_container_width=True)
+
+# Rodapé simples
+st.sidebar.markdown("---")
+st.sidebar.info("Projeto Acadêmico - Sistema de Otimização de Oficina")
