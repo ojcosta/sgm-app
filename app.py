@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 # --- CONFIGURAÇÕES INICIAIS ---
-st.set_page_config(page_title="SGM - Oficina Pro", layout="wide", page_icon="💰")
+st.set_page_config(page_title="SGM - Oficina Pro", layout="wide", page_icon="🚘")
 
 ARQUIVO_DADOS = "manutencoes.csv"
 
