@@ -18,7 +18,7 @@ if escolha == "Registrar Manutenção":
         with col1:
             placa = st.text_input("Placa do Veículo")
             veiculo = st.text_input("Modelo/Marca")
-            responsavel = st.selectbox("Mecânico Responsável", ["João Silva", "Ricardo Souza", "Ana Costa"])
+            responsavel = st.selectbox("Mecânico Responsável", ["João Silva", "Jonas Costa", "Ricardo Souza", "Ana Costa"])
         
         with col2:
             data = st.date_input("Data do Serviço", datetime.now())
