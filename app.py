@@ -43,7 +43,8 @@ def autenticacao():
         senha = st.sidebar.text_input("Senha", type="password")
         if st.sidebar.button("Entrar"):
             # Credenciais para o seu trabalho
-            if usuario == "oficina" and senha == "12345":
+            if usuario == "jonascosta" and senha == "MENGo2026@":
+            if usuario == "rebecaalves" and senha == "14091221"
                 st.session_state.logado = True
                 st.rerun()
             else:
