@@ -33,24 +33,32 @@ def carregar_dados():
         return pd.DataFrame(columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
 
 # --- SISTEMA DE LOGIN ---
+# --- SISTEMA DE LOGIN MULTI-USUÁRIO ---
 def autenticacao():
+    # Defina aqui os usuários permitidos: "usuario": "senha"
+    USUARIOS_PERMITIDOS = {
+        "jonascosta": "MENGo2026@",
+        "rebecaalves": "33091221",
+        "wilsonalves": "RR2026",
+        "oficina": "oficina123"
+    }
+
     if "logado" not in st.session_state:
         st.session_state.logado = False
 
     if not st.session_state.logado:
-        st.sidebar.title("Acesso ao Sistema")
-        usuario = st.sidebar.text_input("Usuário")
-        senha = st.sidebar.text_input("Senha", type="password")
+        st.sidebar.title("🔐 Acesso ao Sistema")
+        usuario_input = st.sidebar.text_input("Usuário")
+        senha_input = st.sidebar.text_input("Senha", type="password")
+        
         if st.sidebar.button("Entrar"):
-            # Credenciais para o seu trabalho
-            if usuario == "jonascosta" and senha == "MENGo2026@":
+            # Verifica se o usuário existe e se a senha está correta
+            if usuario_input in USUARIOS_PERMITIDOS and USUARIOS_PERMITIDOS[usuario_input] == senha_input:
                 st.session_state.logado = True
+                st.session_state.usuario_nome = usuario_input # Guarda quem logou
                 st.rerun()
             else:
                 st.sidebar.error("Usuário ou senha inválidos")
-        
-        st.info("💡 Insira o usuário e senha para logar")
-        st.warning("Aguardando login para liberar as funcionalidades...")
         return False
     return True
 
