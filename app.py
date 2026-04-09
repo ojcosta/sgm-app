@@ -70,13 +70,13 @@ def autenticacao():
             st.markdown("<h4 style='text-align: center; color: gray;'>Gestão de Manutenção e Custos</h4>", unsafe_allow_html=True)
             
             st.info("""
-            **Acesso Restrito** Para registrar novos serviços ou consultar o histórico financeiro, utilize o formulário de login ao lado.
+            **Acesso Restrito.** Para registrar novos serviços ou consultar o histórico financeiro, utilize o formulário de login ao lado.
             """)
             
             # Pequeno Dashboard visual (apenas ilustrativo na tela de login)
             col_a, col_b, col_c = st.columns(3)
             col_a.metric("Status", "Online")
-            col_b.metric("Versão", "6.4")
+            col_b.metric("Versão", "7.2 (Beta)")
             col_c.metric("Suporte", "Ativo")
             
         return False
@@ -85,7 +85,7 @@ def autenticacao():
 # --- EXECUÇÃO DO SISTEMA ---
 if autenticacao():
     # Banner de boas-vindas após login
-    st.title(f"🔧 Bem-vindo, {st.session_state.usuario_nome.capitalize()}!")
+    st.title(f"🔧 Bem-vindo(a)")
     
     if st.sidebar.button("Sair / Logout"):
         st.session_state.logado = False
