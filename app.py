@@ -13,7 +13,8 @@ def carregar_dados():
     try:
         return conn.read(ttl=0)
     except:
-        return pd.DataFrame(columns=['OS', 'Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
+        # Atualizado para incluir a coluna 'Proprietário'
+        return pd.DataFrame(columns=['OS', 'Data', 'Placa', 'Veículo', 'Proprietário', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
 
 # Listas de opções
 LISTA_SERVICOS = [
@@ -64,7 +65,8 @@ if autenticacao():
         
         # Lógica da OS Automática
         if not df.empty and 'OS' in df.columns:
-            proxima_os = int(df['OS'].max()) + 1
+            # Garante que a OS seja tratada como número para o cálculo do max
+            proxima_os = int(pd.to_numeric(df['OS']).max()) + 1
         else:
             proxima_os = 1
             
@@ -75,7 +77,7 @@ if autenticacao():
             with col1:
                 placa = st.text_input("Placa do Veículo").upper()
                 veiculo = st.text_input("Modelo/Marca")
-                propietario = st.text_input("Propietário do Veículo")
+                propietario = st.text_input("Proprietário do Veículo") # Campo que você pediu
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
             with col2:
                 data = st.date_input("Data do Serviço", datetime.now())
@@ -88,8 +90,9 @@ if autenticacao():
             
             if enviar:
                 if placa and veiculo and motivo:
-                    nova_linha = pd.DataFrame([[proxima_os, str(data), placa, veiculo, servico, custo, motivo, responsavel]], 
-                                             columns=['OS', 'Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
+                    # ACRESCENTADO: 'propietario' incluído na lista de valores e na lista de colunas
+                    nova_linha = pd.DataFrame([[proxima_os, str(data), placa, veiculo, propietario, servico, custo, motivo, responsavel]], 
+                                             columns=['OS', 'Data', 'Placa', 'Veículo', 'Proprietário', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
                     
                     df_final = pd.concat([df, nova_linha], ignore_index=True)
                     conn.update(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"], data=df_final)
@@ -104,19 +107,19 @@ if autenticacao():
         if df.empty:
             st.info("Ainda não há registros.")
         else:
-            total_geral = df['Custo (R$)'].sum()
-            st.metric("Receita Total", f"R$ {total_geral:.2f}")
+            # Proteção para cálculo do total caso a coluna contenha valores não numéricos
+            total_geral = pd.to_numeric(df['Custo (R$)'], errors='coerce').sum()
+            st.metric("Receita Total de Reparos", f"R$ {total_geral:.2f}")
             
             st.write("---")
             
             busca = st.text_input("Buscar por Placa ou OS:").upper()
             if busca:
-                # Busca flexível por placa ou número da OS
                 resultado = df[(df['Placa'].astype(str).str.contains(busca)) | (df['OS'].astype(str).str.contains(busca))]
                 st.dataframe(resultado, use_container_width=True)
             else:
-                # O comando abaixo agora está identado corretamente dentro do 'else'
+                # Ordenar pela OS para mostrar a mais recente primeiro
                 st.dataframe(df.sort_values(by='OS', ascending=False), use_container_width=True)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("Versão 5.0 - SGMa Cloud")
+    st.sidebar.caption("Versão 5.2 - SGMa Cloud")
