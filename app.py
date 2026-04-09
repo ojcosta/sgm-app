@@ -26,9 +26,7 @@ def carregar_dados():
 
 # Listas de opções
 LISTA_SERVICOS = [
-    "Troca de Óleo e Filtro", "Revisão de Freios", "Alinhamento e Balanceamento",
-    "Suspensão e Amortecedores", "Sistema Elétrico / Bateria", "Ar-condicionado",
-    "Revisão Geral", "Revisão de Lanternagem", "Reparo de Motor", "Outros (Expecificar)"
+    "Troca de Óleo e Filtro", "Reparo de Freios", "Alinhamento e Balanceamento", "Suspensão e Amortecedores", "Sistema Elétrico", "Ar-condicionado", "Revisão de Lanternagem", "Reparo de Motor", "Revisão Geral", "Outros (Expecificar)"
 ]
 
 LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
@@ -112,13 +110,13 @@ if autenticacao():
         with st.form("form_oficina", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
-                placa = st.text_input("Placa do Veículo").upper()
+                data = st.date_input("Data do Serviço", datetime.now())
                 marca = st.selectbox("Marca", LISTA_MARCA) # Ajustado variável para não conflitar
                 propietario = st.text_input("Proprietário do Veículo")
-                responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
             with col2:
-                data = st.date_input("Data do Serviço", datetime.now())
+                responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
                 modelo = st.text_input("Modelo") # Ajustado variável para clareza
+                placa = st.text_input("Placa do Veículo").upper()
                 servico = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
                 custo = st.number_input("Custo Total (R$)", min_value=0.0, step=50.0, format="%.2f")
             
