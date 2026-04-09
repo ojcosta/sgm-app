@@ -92,7 +92,8 @@ if autenticacao():
             col1, col2 = st.columns(2)
             with col1:
                 placa = st.text_input("Placa do Veículo").upper()
-                veiculo = st.selectbox("Modelo/Marca", LISTA_MARCA)
+                veiculo = st.selectbox("Modelo", LISTA_MARCA)
+                veiculo = st.text_input("Marca")
                 propietario = st.text_input("Proprietário do Veículo")
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
             with col2:
