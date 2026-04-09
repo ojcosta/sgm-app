@@ -35,8 +35,8 @@ LISTA_SERVICOS = [
 
 LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
 LISTA_MARCA = [
-    "Fiat Uno", "Volkswagen Gol", "Chevrolet Onix", "Ford Ka", "Renault Sandero",
-    "Hyundai HB20", "Toyota Corolla", "Honda Civic", "Jeep Renegade", "Outros"
+    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi",
+    "Hyundai", "Toyota", "Honda", "Jeep","Mercedes-Benz", "Outros"
 ]
 
 # --- SISTEMA DE LOGIN ---
