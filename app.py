@@ -113,12 +113,12 @@ if autenticacao():
                 data = st.date_input("Data do Serviço", datetime.now())
                 marca = st.selectbox("Marca", LISTA_MARCA) # Ajustado variável para não conflitar
                 propietario = st.text_input("Proprietário do Veículo")
+                custo = st.number_input("Custo Total (R$)", min_value=0.0, step=50.0, format="%.2f")
             with col2:
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
                 modelo = st.text_input("Modelo") # Ajustado variável para clareza
                 placa = st.text_input("Placa do Veículo").upper()
                 servico = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
-                custo = st.number_input("Custo Total (R$)", min_value=0.0, step=50.0, format="%.2f")
             
             motivo = st.text_area("Diagnóstico")
             
@@ -161,6 +161,10 @@ if autenticacao():
                     st.dataframe(exibir_df.sort_values(by='OS', ascending=False), use_container_width=True)
                 else:
                     st.dataframe(exibir_df, use_container_width=True)
-
+        elif escolha == "Sobre":
+            st.subheader("📱 Sobre o APP")
+            if df.empty or len(df.columns) < 2:
+            st.info("App desenvolvido por Jonas Costa como parte de um projeto acadêmico. A aplicação foi criada com o objetivo de otimizar e simplificar a gestão de serviços realizados em garagens e oficinas, permitindo o registro organizado das atividades executadas e o controle dos custos financeiros, contribuindo para uma administração mais eficiente do negócio.")
+            
     st.sidebar.markdown("---")
     st.sidebar.caption("Versão 7.2")
