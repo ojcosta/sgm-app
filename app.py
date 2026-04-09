@@ -34,6 +34,10 @@ LISTA_SERVICOS = [
 ]
 
 LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
+LISTA_MARCA = [
+    "Fiat Uno", "Volkswagen Gol", "Chevrolet Onix", "Ford Ka", "Renault Sandero",
+    "Hyundai HB20", "Toyota Corolla", "Honda Civic", "Jeep Renegade", "Outros"
+]
 
 # --- SISTEMA DE LOGIN ---
 def autenticacao():
@@ -88,7 +92,7 @@ if autenticacao():
             col1, col2 = st.columns(2)
             with col1:
                 placa = st.text_input("Placa do Veículo").upper()
-                veiculo = st.text_input("Modelo/Marca")
+                veiculo = st.text_input("Modelo/Marca", LISTA_MARCA)
                 propietario = st.text_input("Proprietário do Veículo")
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
             with col2:
@@ -141,4 +145,4 @@ if autenticacao():
                     st.dataframe(exibir_df, use_container_width=True)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("Versão 5.3 - SGMa Pro")
+    st.sidebar.caption("Versão 6.1 - Car Models")
