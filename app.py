@@ -105,7 +105,7 @@ if autenticacao():
         with col1:
             data = st.date_input("Data do Serviço", datetime.now(), disabled=travado)
             modelo = st.text_input("Modelo e Ano do Veículo", disabled=travado)
-            propietario = st.text_input("Proprietário do Veículo", disabled=travado)
+            proprietario = st.text_input("Proprietário do Veículo", disabled=travado)
         with col2:
             marca = st.selectbox("Marca", LISTA_MARCA, disabled=travado)
             placa = st.text_input("Placa do Veículo (ABC1234 / ABC1D23)", disabled=travado).upper()
