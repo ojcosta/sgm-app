@@ -6,6 +6,10 @@ from streamlit_gsheets import GSheetsConnection
 # --- CONFIGURAÇÕES INICIAIS ---
 st.set_page_config(page_title="SGM Automotiva", layout="wide", page_icon="🚘")
 
+# --- NOVO: URL DA LOGO DO SISTEMA ---
+# Substitua o link abaixo pelo link direto da sua imagem (ex: do Imgur ou GitHub)
+URL_LOGO_SISTEMA = "https://imgur.com/a/sgm-automotiva-3e7RIXC.png"
+
 # --- CONEXÃO COM GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -47,6 +51,12 @@ def autenticacao():
         st.session_state.logado = False
 
     if not st.session_state.logado:
+        # Exibição da logo na sidebar de login
+        try:
+            st.sidebar.image(URL_LOGO_SISTEMA, use_container_width=True)
+        except:
+            pass
+
         st.sidebar.markdown("# 🔐 Portal SGM")
         usuario_input = st.sidebar.text_input("Usuário")
         senha_input = st.sidebar.text_input("Senha", type="password")
@@ -62,6 +72,11 @@ def autenticacao():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("<br><br>", unsafe_allow_html=True)
+            # Logo centralizada na tela de login
+            try:
+                st.image(URL_LOGO_SISTEMA, width=150)
+            except:
+                pass
             st.markdown("<h1 style='text-align: center;'>🚘 SGM Automotiva</h1>", unsafe_allow_html=True)
             st.info("**Acesso Restrito.** Use o painel lateral para entrar.")
             
@@ -75,6 +90,12 @@ def autenticacao():
 
 # --- EXECUÇÃO DO SISTEMA ---
 if autenticacao():
+    # Exibição da logo na sidebar após login
+    try:
+        st.sidebar.image(URL_LOGO_SISTEMA, use_container_width=True)
+    except:
+        pass
+
     st.sidebar.write(f"Logado como: **{st.session_state.usuario_nome}**")
     if st.sidebar.button("Sair / Logout"):
         st.session_state.logado = False
@@ -133,7 +154,6 @@ if autenticacao():
         if df.empty or len(df.columns) < 2:
             st.info("Nenhum registro encontrado.")
         else:
-            # --- DASHBOARD DE MÉTRICAS ---
             custos_numericos = pd.to_numeric(df['Custo (R$)'], errors='coerce').fillna(0)
             total_geral = custos_numericos.sum()
             ticket_medio = total_geral / len(df) if len(df) > 0 else 0
@@ -146,21 +166,18 @@ if autenticacao():
             
             st.write("---")
             
-            # --- FILTROS ---
             c_filtro1, c_filtro2 = st.columns([2, 1])
             with c_filtro1:
                 busca = st.text_input("Buscar por Placa ou OS:").upper()
             with c_filtro2:
                 filtro_mec = st.selectbox("Filtrar por Mecânico", ["Todos"] + LISTA_MECANICOS)
 
-            # Aplicando filtros
             df_filtrado = df.copy()
             if busca:
                 df_filtrado = df_filtrado[(df_filtrado['Placa'].astype(str).str.contains(busca)) | (df_filtrado['OS'].astype(str).str.contains(busca))]
             if filtro_mec != "Todos":
                 df_filtrado = df_filtrado[df_filtrado['Responsável'] == filtro_mec]
 
-            # --- TABELA FORMATADA ---
             st.dataframe(
                 df_filtrado.sort_values(by='OS', ascending=False),
                 use_container_width=True,
@@ -174,13 +191,21 @@ if autenticacao():
 
     elif escolha == "Sobre o APP":
         st.subheader("📱 Sobre o SGM Automotiva")
-        st.markdown(f"""
-        **Desenvolvedor:** Jonas Costa  
-        **Versão:** 9.0 (Enterprise Edition)
-        
-        Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas. 
-        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz.
-        """)
+        # Layout com logo na descrição
+        col_logo, col_texto = st.columns([1, 4])
+        with col_logo:
+            try:
+                st.image(URL_LOGO_SISTEMA, use_container_width=True)
+            except:
+                pass
+        with col_texto:
+            st.markdown(f"""
+            **Desenvolvedor:** Jonas Costa  
+            **Versão:** 9.0 (Enterprise Edition)
+            
+            Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas. 
+            Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz.
+            """)
 
     st.sidebar.markdown("---")
     st.sidebar.caption("SGM Automotiva v9.0")
