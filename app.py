@@ -35,8 +35,8 @@ LISTA_SERVICOS = [
 
 LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
 LISTA_MARCA = [
-    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi",
-    "Hyundai", "Toyota", "Honda", "Jeep","Mercedes-Benz", "Outros"
+    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi","Nissan", "BYD",
+    "Hyundai", "Toyota", "Honda", "Jeep","Mercedes-Benz", "Outros (Expecificar)"
 ]
 
 # --- SISTEMA DE LOGIN ---
@@ -92,12 +92,12 @@ if autenticacao():
             col1, col2 = st.columns(2)
             with col1:
                 placa = st.text_input("Placa do Veículo").upper()
-                veiculo = st.selectbox("Modelo", LISTA_MARCA)
+                veiculo = st.selectbox("Marca", LISTA_MARCA)
                 propietario = st.text_input("Proprietário do Veículo")
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
             with col2:
                 data = st.date_input("Data do Serviço", datetime.now())
-                veiculo = st.text_input("Marca")
+                veiculo = st.text_input("Modelo")
                 servico = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
                 custo = st.number_input("Custo Total (R$)", min_value=0.0, step=50.0, format="%.2f")
             
