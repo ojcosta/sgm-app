@@ -119,5 +119,6 @@ if autenticacao():
                 # Exibe ordenado pela OS mais recente no topo
     
 st.dataframe(df.sort_values(by='OS', ascending=False), use_container_width=True)
+
 st.sidebar.markdown("---")
     st.sidebar.caption("VERSÃO 5.1 - 08/04/2026, ÀS 21:46")
