@@ -109,7 +109,6 @@ if autenticacao():
         with col2:
             marca = st.selectbox("Marca", LISTA_MARCA, disabled=travado)
             placa = st.text_input("Placa do Veículo (ABC1234 / ABC1D23)", disabled=travado).upper()
-            responsavel_os = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
 
         st.divider()
 
@@ -120,6 +119,8 @@ if autenticacao():
             servico_item = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
         with c2:
             custo_item = st.number_input("Custo deste Item (R$)", min_value=0.0, step=10.0, format="%.2f")
+        with c3:
+            responsavel_os = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
         
         motivo_item = st.text_area("Diagnóstico e Observações deste item")
 
