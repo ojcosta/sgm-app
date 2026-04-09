@@ -84,93 +84,89 @@ if autenticacao():
 
     df = carregar_dados()
 
-    else escolha == "Registrar Novo Serviço":
-    st.subheader("📝 Registrar Ordem de Serviço")
-    
-    # 1. Inicializa a lista de serviços na sessão se não existir
-    if "lista_servicos_temporaria" not in st.session_state:
-        st.session_state.lista_servicos_temporaria = []
-
-    # --- SEÇÃO 1: DADOS DO VEÍCULO (CONGELADOS APÓS O PRIMEIRO SERVIÇO) ---
-    st.markdown("### 🚗 Dados do Veículo")
-    
-    # Bloqueia os campos se já houver itens na lista
-    bloquear_veiculo = len(st.session_state.lista_servicos_temporaria) > 0
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        placa = st.text_input("Placa", disabled=bloquear_veiculo).upper()
-        proprietario = st.text_input("Proprietário", disabled=bloquear_veiculo)
-    with col2:
-        marca = st.text_input("Marca", disabled=bloquear_veiculo)
-        modelo = st.text_input("Modelo", disabled=bloquear_veiculo)
-    with col3:
-        ano = st.text_input("Ano", disabled=bloquear_veiculo)
-        data = st.date_input("Data do Serviço", datetime.now(), disabled=bloquear_veiculo)
-
-    st.divider()
-
-    # --- SEÇÃO 2: ADICIONAR SERVIÇOS ---
-    st.markdown("### 🛠️ Adicionar Serviços")
-    c1, c2, c3 = st.columns([2, 1, 1])
-    
-    with c1:
-        servico_selecionado = st.selectbox("Selecione o Serviço", LISTA_SERVICOS)
-    with c2:
-        custo_item = st.number_input("Custo do Item (R$)", min_value=0.0, step=10.0)
-    with c3:
-        mecanico = st.selectbox("Mecânico", LISTA_MECANICOS)
+    if escolha == "Registrar Novo Serviço":
+        st.subheader("📝 Registrar Ordem de Serviço")
         
-    diagnostico_item = st.text_area("Diagnóstico deste item")
-
-    if st.button("➕ Adicionar Serviço à OS"):
-        if placa and diagnostico_item:
-            # Adiciona o item à lista na memória
-            novo_item = {
-                "Data": data,
-                "Placa": placa,
-                "Marca/Modelo": f"{marca} {modelo}",
-                "Ano": ano,
-                "Proprietário": proprietario,
-                "Serviço": servico_selecionado,
-                "Custo (R$)": custo_item,
-                "Diagnóstico": diagnostico_item,
-                "Responsável": mecanico
-            }
-            st.session_state.lista_servicos_temporaria.append(novo_item)
-            st.toast("Item adicionado!")
-            st.rerun() # Atualiza para travar os campos do veículo
-        else:
-            st.error("Preencha a Placa e o Diagnóstico para adicionar.")
-
-    # --- SEÇÃO 3: RESUMO E FINALIZAÇÃO ---
-    if st.session_state.lista_servicos_temporaria:
-        st.markdown("### 📋 Itens da OS Atual")
-        df_temp = pd.DataFrame(st.session_state.lista_servicos_temporaria)
-        st.table(df_temp[["Serviço", "Custo (R$)", "Responsável"]])
+        # 1. Inicialização da Lista Temporária e ID da OS
+        if "lista_servicos_temp" not in st.session_state:
+            st.session_state.lista_servicos_temp = []
+            try:
+                st.session_state.proxima_os = int(pd.to_numeric(df['OS'], errors='coerce').max() or 0) + 1
+            except:
+                st.session_state.proxima_os = len(df) + 1
+            
+        st.info(f"📌 Ordem de Serviço atual: **{st.session_state.proxima_os}**")
         
-        st.write(f"**Total da OS: R$ {df_temp['Custo (R$)'].sum():.2f}**")
+        # --- SEÇÃO 1: DADOS DO VEÍCULO (CONGELAM APÓS ADICIONAR 1º SERVIÇO) ---
+        # Definimos se os campos devem ser travados
+        travado = len(st.session_state.lista_servicos_temp) > 0
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            data = st.date_input("Data do Serviço", datetime.now(), disabled=travado)
+            marca = st.selectbox("Marca", LISTA_MARCA, disabled=travado)
+            propietario = st.text_input("Proprietário do Veículo", disabled=travado)
+        with col2:
+            modelo = st.text_input("Modelo e Ano do Veículo", disabled=travado)
+            placa = st.text_input("Placa do Veículo (ABC1234 / ABC1D23)", disabled=travado).upper()
+            responsavel_os = st.selectbox("Mecânico Responsável", LISTA_MECANICOS, disabled=travado)
 
-        col_fin1, col_fin2 = st.columns(2)
-        with col_fin1:
-            if st.button("💾 Salvar Tudo na Planilha", type="primary"):
-                # Concatena com o DataFrame principal e salva
-                df_para_salvar = pd.DataFrame(st.session_state.lista_servicos_temporaria)
-                
-                # Aqui você usa sua função de salvar (CSV ou Google Sheets)
-                # Exemplo: df = pd.concat([df, df_para_salvar], ignore_index=True)
-                # conn.update(spreadsheet=..., data=df)
-                
-                st.success("✅ Ordem de Serviço completa registrada com sucesso!")
-                st.session_state.lista_servicos_temporaria = [] # Limpa a lista
-                st.balloons()
+        st.divider()
+
+        # --- SEÇÃO 2: ADIÇÃO DE SERVIÇOS (MÚLTIPLOS ITENS) ---
+        st.markdown("### 🛠️ Adicionar Serviço/Defeito")
+        c1, c2 = st.columns([2, 1])
+        with c1:
+            servico_item = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
+        with c2:
+            custo_item = st.number_input("Custo deste Item (R$)", min_value=0.0, step=10.0, format="%.2f")
+        
+        motivo_item = st.text_area("Diagnóstico e Observações deste item")
+
+        if st.button("➕ Adicionar à mesma OS"):
+            if placa and modelo and motivo_item:
+                novo_item = {
+                    'OS': st.session_state.proxima_os,
+                    'Data': str(data),
+                    'Placa': placa,
+                    'Veículo': f"{marca} {modelo}",
+                    'Proprietário': propietario,
+                    'Serviço': servico_item,
+                    'Custo (R$)': custo_item,
+                    'Diagnóstico': motivo_item,
+                    'Responsável': responsavel_os
+                }
+                st.session_state.lista_servicos_temp.append(novo_item)
+                st.toast("Item adicionado com sucesso!")
                 st.rerun()
-        
-        with col_fin2:
-            if st.button("🗑️ Cancelar OS"):
-                st.session_state.lista_servicos_temporaria = []
-                st.rerun()
+            else:
+                st.error("⚠️ Preencha os dados do veículo e o diagnóstico.")
 
+        # --- SEÇÃO 3: RESUMO E FINALIZAÇÃO ---
+        if st.session_state.lista_servicos_temp:
+            st.markdown("---")
+            st.markdown("### 📋 Resumo da OS")
+            df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
+            st.dataframe(df_temp[['Serviço', 'Custo (R$)', 'Diagnóstico']], use_container_width=True)
+            
+            st.write(f"**Total acumulado: R$ {df_temp['Custo (R$)'].sum():.2f}**")
+
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                if st.button("💾 Finalizar e Salvar na Nuvem", type="primary", use_container_width=True):
+                    with st.status("📦 Enviando para Google Sheets...", expanded=True) as status:
+                        df_final = pd.concat([df, df_temp], ignore_index=True)
+                        conn.update(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"], data=df_final)
+                        status.update(label="✅ OS Salva com Sucesso!", state="complete", expanded=False)
+                    
+                    st.session_state.lista_servicos_temp = [] # Limpa a lista
+                    st.balloons()
+                    st.rerun()
+            
+            with col_btn2:
+                if st.button("🗑️ Cancelar OS", use_container_width=True):
+                    st.session_state.lista_servicos_temp = []
+                    st.rerun()
     elif escolha == "Histórico e Financeiro":
         st.subheader("🔍 Consulta e Inteligência de Negócio")
         
