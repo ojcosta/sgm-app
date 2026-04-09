@@ -4,7 +4,7 @@ from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
 # --- CONFIGURAÇÕES INICIAIS ---
-st.set_page_config(page_title="Sistema de Gestão Mecânica Automotiva (SGMa)", layout="wide", page_icon="🚘")
+st.set_page_config(page_title="SGM Automotiva", layout="wide", page_icon="🚘")
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -82,7 +82,7 @@ if autenticacao():
                 servico = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
                 custo = st.number_input("Custo Total (R$)", min_value=0.0, step=50.0, format="%.2f")
             
-            motivo = st.text_area("Diagnóstico (Por que foi feito?)")
+            motivo = st.text_area("Diagnóstico")
             
             enviar = st.form_submit_button("Salvar Manutenção")
             
