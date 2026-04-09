@@ -8,7 +8,7 @@ st.set_page_config(page_title="SGM Automotiva", layout="wide", page_icon="🚘")
 
 # --- NOVO: URL DA LOGO DO SISTEMA ---
 # Substitua o link abaixo pelo link direto da sua imagem (ex: do Imgur ou GitHub)
-URL_LOGO_SISTEMA = "https://imgur.com/a/sgm-automotiva-3e7RIXC.png"
+URL_LOGO_SISTEMA = "https://imgur.com/gallery/sgm-automotiva-3e7RIXC.png"
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
