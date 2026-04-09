@@ -11,9 +11,19 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 def carregar_dados():
     try:
-        return conn.read(ttl=0)
+        dados = conn.read(ttl=0)
+        # Se a planilha estiver vazia ou faltar colunas críticas, reconstrói o cabeçalho
+        colunas_necessarias = ['OS', 'Data', 'Placa', 'Veículo', 'Proprietário', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável']
+        
+        if dados.empty:
+            return pd.DataFrame(columns=colunas_necessarias)
+        
+        # Verifica se todas as colunas existem; se não, adiciona as que faltam com valor vazio
+        for col in colunas_necessarias:
+            if col not in dados.columns:
+                dados[col] = None
+        return dados
     except:
-        # Atualizado para incluir a coluna 'Proprietário'
         return pd.DataFrame(columns=['OS', 'Data', 'Placa', 'Veículo', 'Proprietário', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
 
 # Listas de opções
@@ -63,12 +73,14 @@ if autenticacao():
     if escolha == "Registrar Novo Serviço":
         st.subheader("📝 Registrar Ordem de Serviço")
         
-        # Lógica da OS Automática
-        if not df.empty and 'OS' in df.columns:
-            # Garante que a OS seja tratada como número para o cálculo do max
-            proxima_os = int(pd.to_numeric(df['OS']).max()) + 1
-        else:
-            proxima_os = 1
+        # Lógica da OS Automática com tratamento de erro
+        try:
+            if not df.empty and 'OS' in df.columns:
+                proxima_os = int(pd.to_numeric(df['OS'], errors='coerce').max() or 0) + 1
+            else:
+                proxima_os = 1
+        except:
+            proxima_os = len(df) + 1
             
         st.info(f"📌 Ordem de Serviço atual: **{proxima_os}**")
         
@@ -77,7 +89,7 @@ if autenticacao():
             with col1:
                 placa = st.text_input("Placa do Veículo").upper()
                 veiculo = st.text_input("Modelo/Marca")
-                propietario = st.text_input("Proprietário do Veículo") # Campo que você pediu
+                propietario = st.text_input("Proprietário do Veículo")
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
             with col2:
                 data = st.date_input("Data do Serviço", datetime.now())
@@ -90,7 +102,6 @@ if autenticacao():
             
             if enviar:
                 if placa and veiculo and motivo:
-                    # ACRESCENTADO: 'propietario' incluído na lista de valores e na lista de colunas
                     nova_linha = pd.DataFrame([[proxima_os, str(data), placa, veiculo, propietario, servico, custo, motivo, responsavel]], 
                                              columns=['OS', 'Data', 'Placa', 'Veículo', 'Proprietário', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
                     
@@ -99,27 +110,35 @@ if autenticacao():
                     
                     st.success(f"✅ Registro da OS nº {proxima_os} salvo com sucesso!")
                     st.balloons()
+                    st.rerun()
                 else:
                     st.error("⚠️ Preencha todos os campos obrigatórios.")
 
     elif escolha == "Histórico e Financeiro":
         st.subheader("🔍 Consulta e Relatório Financeiro")
-        if df.empty:
-            st.info("Ainda não há registros.")
+        if df.empty or len(df.columns) < 2:
+            st.info("Ainda não há registros ou a planilha está sendo configurada.")
         else:
-            # Proteção para cálculo do total caso a coluna contenha valores não numéricos
-            total_geral = pd.to_numeric(df['Custo (R$)'], errors='coerce').sum()
-            st.metric("Receita Total de Reparos", f"R$ {total_geral:.2f}")
+            # Cálculo do Financeiro com tratamento para evitar o KeyError
+            if 'Custo (R$)' in df.columns:
+                total_geral = pd.to_numeric(df['Custo (R$)'], errors='coerce').fillna(0).sum()
+                st.metric("Receita Total de Reparos", f"R$ {total_geral:.2f}")
             
             st.write("---")
             
             busca = st.text_input("Buscar por Placa ou OS:").upper()
+            
+            # Filtra o DataFrame apenas com as colunas que existem para evitar erros visuais
+            exibir_df = df.copy()
+            
             if busca:
-                resultado = df[(df['Placa'].astype(str).str.contains(busca)) | (df['OS'].astype(str).str.contains(busca))]
+                resultado = exibir_df[(exibir_df['Placa'].astype(str).str.contains(busca)) | (exibir_df['OS'].astype(str).str.contains(busca))]
                 st.dataframe(resultado, use_container_width=True)
             else:
-                # Ordenar pela OS para mostrar a mais recente primeiro
-                st.dataframe(df.sort_values(by='OS', ascending=False), use_container_width=True)
+                if 'OS' in exibir_df.columns:
+                    st.dataframe(exibir_df.sort_values(by='OS', ascending=False), use_container_width=True)
+                else:
+                    st.dataframe(exibir_df, use_container_width=True)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("Versão 5.2 - SGMa Cloud")
+    st.sidebar.caption("Versão 5.3 - SGMa Pro")
