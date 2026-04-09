@@ -6,50 +6,37 @@ from streamlit_gsheets import GSheetsConnection
 # --- CONFIGURAÇÕES INICIAIS ---
 st.set_page_config(page_title="Sistema de Gestão Mecânica Automotiva (SGMa)", layout="wide", page_icon="🚘")
 
-# --- CONEXÃO COM GOOGLE SHEETS (Substitui o CSV) ---
+# --- CONEXÃO COM GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def carregar_dados():
-    # ttl=0 garante que ele busque os dados atualizados da planilha sempre
     try:
         return conn.read(ttl=0)
     except:
-        # Caso a planilha esteja vazia, cria o cabeçalho padrão
-        return pd.DataFrame(columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
+        # NOVO: Adicionada a coluna 'OS' no DataFrame inicial
+        return pd.DataFrame(columns=['OS', 'Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
 
-# Listas de opções para o formulário
+# Listas de opções
 LISTA_SERVICOS = [
-    "Troca de Óleo e Filtro",
-    "Revisão de Freios",
-    "Alinhamento e Balanceamento",
-    "Suspensão e Amortecedores",
-    "Sistema Elétrico / Bateria",
-    "Ar-condicionado",
-    "Revisão Geral",
-    "Revisão de Lanternagem",
-    "Reparo de Motor",
-    "Outros (Detalhar no Diagnóstico)"
+    "Troca de Óleo e Filtro", "Revisão de Freios", "Alinhamento e Balanceamento",
+    "Suspensão e Amortecedores", "Sistema Elétrico / Bateria", "Ar-condicionado",
+    "Revisão Geral", "Revisão de Lanternagem", "Reparo de Motor", "Outros"
 ]
 
 LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
 
-# --- SISTEMA DE LOGIN MULTI-USUÁRIO ---
+# --- SISTEMA DE LOGIN ---
 def autenticacao():
     USUARIOS_PERMITIDOS = {
-        "jonascosta": "MENGo2026@",
-        "rebecaalves": "33091221",
-        "wilsonalves": "RR2026",
-        "oficina": "oficina123"
+        "jonascosta": "MENGo2026@", "rebecaalves": "33091221",
+        "wilsonalves": "RR2026", "oficina": "oficina123"
     }
-
     if "logado" not in st.session_state:
         st.session_state.logado = False
-
     if not st.session_state.logado:
         st.sidebar.title("🔐 Acesso ao Sistema")
         usuario_input = st.sidebar.text_input("Usuário")
         senha_input = st.sidebar.text_input("Senha", type="password")
-        
         if st.sidebar.button("Entrar"):
             if usuario_input in USUARIOS_PERMITIDOS and USUARIOS_PERMITIDOS[usuario_input] == senha_input:
                 st.session_state.logado = True
@@ -76,14 +63,22 @@ if autenticacao():
     if escolha == "Registrar Novo Serviço":
         st.subheader("📝 Registrar Ordem de Serviço")
         
+        # --- NOVO: LÓGICA DA OS AUTOMÁTICA ---
+        # Se o banco estiver vazio, começa em 1. Se não, pega o último e soma 1.
+        if not df.empty and 'OS' in df.columns:
+            proxima_os = int(df['OS'].max()) + 1
+        else:
+            proxima_os = 1
+            
+        st.info(f"📌 Ordem de Serviço atual: **{proxima_os}**")
+        # -------------------------------------
+        
         with st.form("form_oficina", clear_on_submit=True):
             col1, col2 = st.columns(2)
-            
             with col1:
                 placa = st.text_input("Placa do Veículo").upper()
                 veiculo = st.text_input("Modelo/Marca")
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
-            
             with col2:
                 data = st.date_input("Data do Serviço", datetime.now())
                 servico = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
@@ -95,40 +90,34 @@ if autenticacao():
             
             if enviar:
                 if placa and veiculo and motivo:
-                    # Preparando a nova linha (converte data para string para evitar erro no Google)
-                    nova_linha = pd.DataFrame([[str(data), placa, veiculo, servico, custo, motivo, responsavel]], 
-                                             columns=['Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
+                    # ALTERADO: Incluído 'proxima_os' na lista de valores
+                    nova_linha = pd.DataFrame([[proxima_os, str(data), placa, veiculo, servico, custo, motivo, responsavel]], 
+                                             columns=['OS', 'Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
                     
-                    # Atualiza a planilha no Google Sheets
                     df_final = pd.concat([df, nova_linha], ignore_index=True)
                     conn.update(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"], data=df_final)
                     
-                    st.success(f"✅ Registro da placa {placa} salvo na Nuvem com sucesso!")
+                    st.success(f"✅ Registro da OS nº {proxima_os} salvo com sucesso!")
                     st.balloons()
                 else:
-                    st.error("⚠️ Por favor, preencha Placa, Veículo e Diagnóstico.")
+                    st.error("⚠️ Preencha todos os campos obrigatórios.")
 
     elif escolha == "Histórico e Financeiro":
-        st.subheader("🔍 Consulta e Relatório Financeiro (Google Sheets)")
-        
+        st.subheader("🔍 Consulta e Relatório Financeiro")
         if df.empty:
-            st.info("Ainda não há registros na planilha.")
+            st.info("Ainda não há registros.")
         else:
-            # Painel Financeiro
             total_geral = df['Custo (R$)'].sum()
-            col_metric, _ = st.columns([1, 2])
-            with col_metric:
-                st.metric("Receita Total de Reparos", f"R$ {total_geral:.2f}")
+            st.metric("Receita Total", f"R$ {total_geral:.2f}")
             
-            st.write("---")
-            
-            # Filtro de busca
-            busca = st.text_input("Buscar por Placa:").upper()
+            busca = st.text_input("Buscar por Placa ou OS:").upper()
             if busca:
-                resultado = df[df['Placa'].astype(str).str.contains(busca)]
+                # ALTERADO: Busca agora olha tanto para Placa quanto para o número da OS
+                resultado = df[(df['Placa'].astype(str).str.contains(busca)) | (df['OS'].astype(str).str.contains(busca))]
                 st.dataframe(resultado, use_container_width=True)
             else:
-                st.dataframe(df.sort_values(by='Data', ascending=False), use_container_width=True)
-
-    st.sidebar.markdown("---")
-    st.sidebar.caption("Versão 4.0 - Google Sheets Cloud")
+                # Exibe ordenado pela OS mais recente no topo
+    
+st.dataframe(df.sort_values(by='OS', ascending=False), use_container_width=True)
+st.sidebar.markdown("---")
+    st.sidebar.caption("VERSÃO 5.1 - 08/04/2026, ÀS 21:46")
