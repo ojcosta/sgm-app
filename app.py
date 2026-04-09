@@ -89,7 +89,7 @@ if autenticacao():
         st.session_state.logado = False
         st.rerun()
 
-    menu = ["Registrar Novo Serviço", "Histórico e Financeiro"]
+    menu = ["Registrar Novo Serviço", "Histórico e Financeiro", "Sobre o APP"]
     escolha = st.sidebar.selectbox("Menu de Navegação:", menu)
 
     df = carregar_dados()
