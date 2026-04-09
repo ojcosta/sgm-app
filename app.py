@@ -84,7 +84,7 @@ if autenticacao():
 
     df = carregar_dados()
 
-    elif escolha == "Registrar Novo Serviço":
+    else escolha == "Registrar Novo Serviço":
     st.subheader("📝 Registrar Ordem de Serviço")
     
     # 1. Inicializa a lista de serviços na sessão se não existir
