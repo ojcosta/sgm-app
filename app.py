@@ -9,7 +9,7 @@ st.set_page_config(page_title="SGM Automotiva", layout="wide", page_icon="🚘")
 # --- NOVO: URL DA LOGO DO SISTEMA ---
 # Substitua este link pelo link direto para a SUA imagem hospedada online.
 # Recomendação: Use uma imagem PNG com fundo transparente e proporção horizontal ou quadrada.
-URL_LOGO_SISTEMA = "https://imgur.com/a/3e7RIXC" # Exemplo: Uma logo simples de carro
+URL_LOGO_SISTEMA = "https://imgur.com/a/3e7RIXC.png" # Exemplo: Uma logo simples de carro
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
