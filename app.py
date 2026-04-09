@@ -35,7 +35,7 @@ LISTA_SERVICOS = [
 
 LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
 LISTA_MARCA = [
-    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi",, "Nissan", "BYD", "Hyundai", "Toyota", "Honda", "Jeep", "Mercedes-Benz", "Mitsubish", "Infinit", "Jaguar", "Lexus", "Mazda", "Outros (Expecificar)"
+    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi", "Nissan", "BYD", "Hyundai", "Toyota", "Honda", "Jeep", "Mercedes-Benz", "Mitsubish", "Infinit", "Jaguar", "Lexus", "Mazda", "Outros (Expecificar)"
 ]
 
 # --- SISTEMA DE LOGIN ---
@@ -144,4 +144,4 @@ if autenticacao():
                     st.dataframe(exibir_df, use_container_width=True)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("Versão 6.1 - Car Models")
+    st.sidebar.caption("Versão 6.4 - Car Models")
