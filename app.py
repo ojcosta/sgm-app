@@ -4,7 +4,7 @@ from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
 # --- CONFIGURAÇÕES INICIAIS ---
-st.set_page_config(page_title="SGM - Oficina Pro", layout="wide", page_icon="🚘")
+st.set_page_config(page_title="Sistema de Gestão Mecânica Automotiva (SGMa)", layout="wide", page_icon="🚘")
 
 # --- CONEXÃO COM GOOGLE SHEETS (Substitui o CSV) ---
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -26,11 +26,12 @@ LISTA_SERVICOS = [
     "Sistema Elétrico / Bateria",
     "Ar-condicionado",
     "Revisão Geral",
+    "Revisão de Lanternagem"
     "Reparo de Motor",
     "Outros (Detalhar no Diagnóstico)"
 ]
 
-LISTA_MECANICOS = ["João Silva", "Ricardo Souza", "Ana Costa", "Carlos Oliveira"]
+LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
 
 # --- SISTEMA DE LOGIN MULTI-USUÁRIO ---
 def autenticacao():
