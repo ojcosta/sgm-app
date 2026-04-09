@@ -114,7 +114,7 @@ if autenticacao():
 
         # --- SEÇÃO 2: ADIÇÃO DE SERVIÇOS (MÚLTIPLOS ITENS) ---
         st.markdown("### 🛠️ Adicionar Serviço/Defeito")
-        c1, c2, c3 = st.columns([2, 1])
+        c1, c2, c3 = st.columns([3, 2, 1])
         with c1:
             servico_item = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
         with c2:
