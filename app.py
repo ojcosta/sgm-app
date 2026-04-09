@@ -13,7 +13,6 @@ def carregar_dados():
     try:
         return conn.read(ttl=0)
     except:
-        # NOVO: Adicionada a coluna 'OS' no DataFrame inicial
         return pd.DataFrame(columns=['OS', 'Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
 
 # Listas de opções
@@ -63,15 +62,13 @@ if autenticacao():
     if escolha == "Registrar Novo Serviço":
         st.subheader("📝 Registrar Ordem de Serviço")
         
-        # --- NOVO: LÓGICA DA OS AUTOMÁTICA ---
-        # Se o banco estiver vazio, começa em 1. Se não, pega o último e soma 1.
+        # Lógica da OS Automática
         if not df.empty and 'OS' in df.columns:
             proxima_os = int(df['OS'].max()) + 1
         else:
             proxima_os = 1
             
         st.info(f"📌 Ordem de Serviço atual: **{proxima_os}**")
-        # -------------------------------------
         
         with st.form("form_oficina", clear_on_submit=True):
             col1, col2 = st.columns(2)
@@ -90,7 +87,6 @@ if autenticacao():
             
             if enviar:
                 if placa and veiculo and motivo:
-                    # ALTERADO: Incluído 'proxima_os' na lista de valores
                     nova_linha = pd.DataFrame([[proxima_os, str(data), placa, veiculo, servico, custo, motivo, responsavel]], 
                                              columns=['OS', 'Data', 'Placa', 'Veículo', 'Serviço', 'Custo (R$)', 'Diagnóstico', 'Responsável'])
                     
@@ -110,15 +106,19 @@ if autenticacao():
             total_geral = df['Custo (R$)'].sum()
             st.metric("Receita Total", f"R$ {total_geral:.2f}")
             
+            st.write("---")
+            
             busca = st.text_input("Buscar por Placa ou OS:").upper()
             if busca:
-                # ALTERADO: Busca agora olha tanto para Placa quanto para o número da OS
+                # Busca flexível por placa ou número da OS
                 resultado = df[(df['Placa'].astype(str).str.contains(busca)) | (df['OS'].astype(str).str.contains(busca))]
                 st.dataframe(resultado, use_container_width=True)
             else:
-                # Exibe ordenado pela OS mais recente no topo
-    
-st.dataframe(df.sort_values(by='OS', ascending=False), use_container_width=True)
+                # O comando abaixo agora está identado corretamente dentro do 'else'
+                st.dataframe(df.sort_values(by='OS', ascending=False), use_container_width=True)
+
+    st.sidebar.markdown("---")
+    st.sidebar.caption("Versão 5.0 - SGMa Cloud")
 
 st.sidebar.markdown("---")
-    st.sidebar.caption("VERSÃO 5.1 - 08/04/2026, ÀS 21:46")
+st.sidebar.caption("VERSÃO 5.1 - 08/04/2026, ÀS 21:46")
