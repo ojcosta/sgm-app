@@ -26,7 +26,7 @@ LISTA_SERVICOS = [
     "Sistema Elétrico / Bateria",
     "Ar-condicionado",
     "Revisão Geral",
-    "Revisão de Lanternagem"
+    "Revisão de Lanternagem",
     "Reparo de Motor",
     "Outros (Detalhar no Diagnóstico)"
 ]
@@ -80,7 +80,7 @@ if autenticacao():
             col1, col2 = st.columns(2)
             
             with col1:
-                placa = st.text_input("Placa do Veículo (Ex: ABC1234)").upper()
+                placa = st.text_input("Placa do Veículo").upper()
                 veiculo = st.text_input("Modelo/Marca")
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
             
