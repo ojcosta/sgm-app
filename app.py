@@ -30,19 +30,18 @@ def carregar_dados():
 LISTA_SERVICOS = [
     "Troca de Óleo e Filtro", "Revisão de Freios", "Alinhamento e Balanceamento",
     "Suspensão e Amortecedores", "Sistema Elétrico / Bateria", "Ar-condicionado",
-    "Revisão Geral", "Revisão de Lanternagem", "Reparo de Motor", "Outros"
+    "Revisão Geral", "Revisão de Lanternagem", "Reparo de Motor", "Outros (Expecificar"
 ]
 
 LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
 LISTA_MARCA = [
-    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi","Nissan", "BYD",
-    "Hyundai", "Toyota", "Honda", "Jeep","Mercedes-Benz", "Outros (Expecificar)"
+    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi",, "Nissan", "BYD", "Hyundai", "Toyota", "Honda", "Jeep", "Mercedes-Benz", "Mitsubish", "Infinit", "Jaguar", "Lexus", "Mazda", "Outros (Expecificar)"
 ]
 
 # --- SISTEMA DE LOGIN ---
 def autenticacao():
     USUARIOS_PERMITIDOS = {
-        "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", "oficina": "oficina123", "pedrobuebo": "oficina1234"
+        "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", "oficina": "oficina123", "pedrobueno": "oficina1234"
     }
     if "logado" not in st.session_state:
         st.session_state.logado = False
