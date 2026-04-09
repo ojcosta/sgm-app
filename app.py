@@ -104,12 +104,12 @@ if autenticacao():
         col1, col2 = st.columns(2)
         with col1:
             data = st.date_input("Data do Serviço", datetime.now(), disabled=travado)
-            marca = st.selectbox("Marca", LISTA_MARCA, disabled=travado)
+            modelo = st.text_input("Modelo e Ano do Veículo", disabled=travado)
             propietario = st.text_input("Proprietário do Veículo", disabled=travado)
         with col2:
-            modelo = st.text_input("Modelo e Ano do Veículo", disabled=travado)
+            marca = st.selectbox("Marca", LISTA_MARCA, disabled=travado)
             placa = st.text_input("Placa do Veículo (ABC1234 / ABC1D23)", disabled=travado).upper()
-            responsavel_os = st.selectbox("Mecânico Responsável", LISTA_MECANICOS, disabled=travado)
+            responsavel_os = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
 
         st.divider()
 
