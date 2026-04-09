@@ -40,7 +40,7 @@ LISTA_MARCA = [
 def autenticacao():
     USUARIOS_PERMITIDOS = {
         "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", 
-        "oficina": "oficina123", "pedrobueno": "oficina1234"
+        "oficina": "1234", "pedrobueno": "oficina1234"
     }
     
     if "logado" not in st.session_state:
