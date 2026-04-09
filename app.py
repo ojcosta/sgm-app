@@ -75,6 +75,7 @@ if autenticacao():
             with col1:
                 placa = st.text_input("Placa do Veículo").upper()
                 veiculo = st.text_input("Modelo/Marca")
+                propietario = st.text_input("Propietário do Veículo")
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
             with col2:
                 data = st.date_input("Data do Serviço", datetime.now())
@@ -119,6 +120,3 @@ if autenticacao():
 
     st.sidebar.markdown("---")
     st.sidebar.caption("Versão 5.0 - SGMa Cloud")
-
-st.sidebar.markdown("---")
-st.sidebar.caption("VERSÃO 5.1 - 08/04/2026, ÀS 21:46")
