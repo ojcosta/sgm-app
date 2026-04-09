@@ -128,14 +128,15 @@ if autenticacao():
             if placa and modelo and motivo_item:
                 novo_item = {
                     'OS': st.session_state.proxima_os,
-                    'Data': str(data),
-                    'Placa': placa,
-                    'Veículo': f"{marca} {modelo}",
-                    'Proprietário': propietario,
-                    'Serviço': servico_item,
-                    'Custo (R$)': custo_item,
-                    'Diagnóstico': motivo_item,
-                    'Responsável': responsavel_os
+                    'DAATA': str(data),
+                    'PLACA': placa,
+                    'MARCA': marca, 
+                    'MODELO': f"{modelo} {ano}",
+                    'PROPIETÁRIO': proprietario,
+                    'SERVIÇO': servico_item,
+                    'CUSTO (R$)': custo_item,
+                    'DIAGNÓSTICO': motivo_item,
+                    'MECÂNICO': responsavel_os
                 }
                 st.session_state.lista_servicos_temp.append(novo_item)
                 st.toast("Item adicionado com sucesso!")
