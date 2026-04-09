@@ -26,25 +26,27 @@ def carregar_dados():
 
 # Listas de opções
 LISTA_SERVICOS = [
-    "Troca de Óleo e Filtro", "Reparo de Freios", "Alinhamento e Balanceamento", "Suspensão e Amortecedores", "Sistema Elétrico", "Ar-condicionado", "Revisão de Lanternagem", "Reparo de Motor", "Revisão Geral", "Outros (Expecificar)"
+    "Troca de Óleo e Filtro", "Reparo de Freios", "Alinhamento e Balanceamento", "Suspensão e Amortecedores", 
+    "Sistema Elétrico", "Ar-condicionado", "Revisão de Lanternagem", "Reparo de Motor", "Revisão Geral", "Outros (Expecificar)"
 ]
 
 LISTA_MECANICOS = ["Jonas Costa", "Rebeca Alves", "Wilson Alves"]
 LISTA_MARCA = [
-    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi", "Nissan", "BYD", "Hyundai", "Toyota", "Honda", "Jeep", "Mercedes-Benz", "Mitsubish", "Infinit", "Jaguar", "Lexus", "Mazda", "Outros (Expecificar)"
+    "Fiat", "Volkswagen", "Chevrolet", "Ford", "Renault", "Citroën", "BMW", "Audi", "Nissan", "BYD", 
+    "Hyundai", "Toyota", "Honda", "Jeep", "Mercedes-Benz", "Mitsubish", "Infinit", "Jaguar", "Lexus", "Mazda", "Outros (Expecificar)"
 ]
 
 # --- SISTEMA DE LOGIN REESTRUTURADO ---
 def autenticacao():
     USUARIOS_PERMITIDOS = {
-        "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", "oficina": "oficina123", "pedrobueno": "oficina1234"
+        "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", 
+        "oficina": "oficina123", "pedrobueno": "oficina1234"
     }
     
     if "logado" not in st.session_state:
         st.session_state.logado = False
 
     if not st.session_state.logado:
-        # --- Layout da Barra Lateral (Login) ---
         st.sidebar.markdown("# 🔐 Portal SGM")
         st.sidebar.write("Faça login para acessar o painel.")
         
@@ -59,22 +61,16 @@ def autenticacao():
             else:
                 st.sidebar.error("⚠️ Usuário ou senha inválidos")
 
-        # --- Layout do Corpo Central (Preenchimento Visual) ---
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("<br><br>", unsafe_allow_html=True)
-            # Ícone central para tirar a sensação de vazio
             st.markdown("<h1 style='text-align: center;'>🚘 SGM Automotiva</h1>", unsafe_allow_html=True)
             st.markdown("<h4 style='text-align: center; color: gray;'>Gestão de Manutenção e Custos</h4>", unsafe_allow_html=True)
+            st.info("**Acesso Restrito.** Para registrar novos serviços ou consultar o histórico financeiro, utilize o login ao lado.")
             
-            st.info("""
-            **Acesso Restrito.** Para registrar novos serviços ou consultar o histórico financeiro, utilize o formulário de login ao lado.
-            """)
-            
-            # Pequeno Dashboard visual (apenas ilustrativo na tela de login)
             col_a, col_b, col_c = st.columns(3)
             col_a.metric("Status", "Online")
-            col_b.metric("Versão", "7.2 (Beta)")
+            col_b.metric("Versão", "8.1")
             col_c.metric("Suporte", "Ativo")
             
         return False
@@ -82,7 +78,6 @@ def autenticacao():
 
 # --- EXECUÇÃO DO SISTEMA ---
 if autenticacao():
-    # Banner de boas-vindas após login
     st.title(f"🔧 Bem-vindo(a)")
     
     if st.sidebar.button("Sair / Logout"):
@@ -111,17 +106,16 @@ if autenticacao():
             col1, col2 = st.columns(2)
             with col1:
                 data = st.date_input("Data do Serviço", datetime.now())
-                marca = st.selectbox("Marca", LISTA_MARCA) # Ajustado variável para não conflitar
+                marca = st.selectbox("Marca", LISTA_MARCA)
                 propietario = st.text_input("Proprietário do Veículo")
                 custo = st.number_input("Custo Total (R$)", min_value=0.0, step=50.0, format="%.2f")
             with col2:
                 responsavel = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
-                modelo = st.text_input("Modelo") # Ajustado variável para clareza
+                modelo = st.text_input("Modelo")
                 placa = st.text_input("Placa do Veículo").upper()
                 servico = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
             
             motivo = st.text_area("Diagnóstico")
-            
             enviar = st.form_submit_button("Salvar Manutenção")
             
             if enviar:
@@ -141,30 +135,31 @@ if autenticacao():
     elif escolha == "Histórico e Financeiro":
         st.subheader("🔍 Consulta e Relatório Financeiro")
         if df.empty or len(df.columns) < 2:
-            st.info("Ainda não há registros ou a planilha está sendo configurada.")
+            st.info("Ainda não há registros na planilha.")
         else:
             if 'Custo (R$)' in df.columns:
                 total_geral = pd.to_numeric(df['Custo (R$)'], errors='coerce').fillna(0).sum()
                 st.metric("Receita Total de Reparos", f"R$ {total_geral:.2f}")
             
             st.write("---")
-            
             busca = st.text_input("Buscar por Placa ou OS:").upper()
             
-            exibir_df = df.copy()
-            
             if busca:
-                resultado = exibir_df[(exibir_df['Placa'].astype(str).str.contains(busca)) | (exibir_df['OS'].astype(str).str.contains(busca))]
+                resultado = df[(df['Placa'].astype(str).str.contains(busca)) | (df['OS'].astype(str).str.contains(busca))]
                 st.dataframe(resultado, use_container_width=True)
             else:
-                if 'OS' in exibir_df.columns:
-                    st.dataframe(exibir_df.sort_values(by='OS', ascending=False), use_container_width=True)
-                else:
-                    st.dataframe(exibir_df, use_container_width=True)
-        elif escolha == "Sobre":
-            st.subheader("📱 Sobre o APP")
-            if df.empty or len(df.columns) < 2:
-            st.info("App desenvolvido por Jonas Costa como parte de um projeto acadêmico. A aplicação foi criada com o objetivo de otimizar e simplificar a gestão de serviços realizados em garagens e oficinas, permitindo o registro organizado das atividades executadas e o controle dos custos financeiros, contribuindo para uma administração mais eficiente do negócio.")
-            
+                st.dataframe(df.sort_values(by='OS', ascending=False), use_container_width=True)
+
+    elif escolha == "Sobre o APP":
+        st.subheader("📱 Sobre o APP")
+        st.markdown(f"""
+        **SGM Automotiva - Versão 8.1**
+        
+        Este aplicativo foi desenvolvido por **Jonas Costa** como parte de um projeto acadêmico. 
+        O objetivo é otimizar e simplificar a gestão de serviços realizados em garagens e oficinas, 
+        permitindo o registro organizado das atividades e o controle financeiro, contribuindo 
+        para uma administração mais eficiente do negócio.
+        """)
+
     st.sidebar.markdown("---")
-    st.sidebar.caption("Versão 7.2")
+    st.sidebar.caption("Versão 8.1")
