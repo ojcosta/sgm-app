@@ -12,7 +12,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def carregar_dados():
     try:
         dados = conn.read(ttl=0)
-        colunas_necessarias = ['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO']
+        colunas_necessarias = ['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)','PAGAMENTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO']
         
         if dados is None or dados.empty:
             return pd.DataFrame(columns=colunas_necessarias)
@@ -108,13 +108,15 @@ if autenticacao():
         st.divider()
 
         st.markdown("### 🛠️ ADICIONAR SERVIÇO")
-        c1, c2, c3 = st.columns([3, 2, 1])
+        c1, c2, c3, c4 = st.columns([4, 3, 2, 1])
         with c1:
             servico_item = st.selectbox("SERVIÇO REALIZADO", LISTA_SERVICOS)
         with c2:
             custo_item = st.number_input("CUSTO DESTE ITEM (R$)", min_value=0.0, step=10.0, format="%.2f")
         with c3:
             responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
+        with c4:
+            pagamento_item = st.number_input("PAGAMENTO RECEBIDO (R$)", min_value=0.0, step=10.0, format="%.2f")
         
         motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES")
 
@@ -129,6 +131,7 @@ if autenticacao():
                     'PROPRIETÁRIO': proprietario_input,
                     'SERVIÇO': servico_item,
                     'CUSTO (R$)': custo_item,
+                    'PAGAMENTO (R$)': pagamento_item,
                     'DIAGNÓSTICO': motivo_item,
                     'MECÂNICO': responsavel_os
                 }
@@ -194,7 +197,7 @@ if autenticacao():
                 df_filtrado.sort_values(by='OS', ascending=False),
                 use_container_width=True,
                 column_config={
-                    "CUSTO (R$)": st.column_config.NumberColumn("Custo", format="R$ %.2f"),
+                    "CUSTO (R$)": st.column_config.NumberColumn("CUSTO", format="R$ %.2f"),
                     "DATA": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
                     "OS": st.column_config.NumberColumn("OS", format="%d")
                 },
