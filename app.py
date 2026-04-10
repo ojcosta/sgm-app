@@ -31,7 +31,7 @@ LISTA_SERVICOS = [
 
 LISTA_MECANICOS = ["JONAS COSTA", "REBECA ALVES", "WILSON ALVES"]
 LISTA_MARCA = [
-    "ALINHAMENTO E BALANCEAMENTO", "AR-CONDICIONADO", "FREIOS", "LANTERNAGEM", "MOTOR", "REVISÃO GERAL", "SISTEMA ELÉTRICO", "SUSPENSÃO E AMORTECEDORES", "OUTROS DEFEITOS (ESPECIGICAR NO DIAGNÓSTICO)"
+    "AUDI", "BMW", "BYD", "CHEVROLET", "CITROËN", "FIAT", "FORD", "HONDA", "HYUNDAI", "INFINITI", "JAGUAR", "JEEP", "LEXUS", "MAZDA", "MERCEDES-BENZ", "MITSUBISHI", "NISSAN", "OUTROS", "RENAULT", "TOYOTA", "VOLKSWAGEN"
 ]
 
 # --- SISTEMA DE LOGIN ---
@@ -64,7 +64,7 @@ def autenticacao():
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Status", "Online")
-            c2.metric("Versão", "9.0")
+            c2.metric("Versão", "9.1")
             c3.metric("Suporte", "Ativo")
             
         return False
@@ -216,7 +216,7 @@ if autenticacao():
         st.subheader("📱 Sobre o SGM Automotiva")
         st.markdown(f"""
         **Desenvolvedor:** Jonas Costa  
-        **Versão:** 9.0 (Enterprise Edition)
+        **Versão:** 9.1 (Enterprise Edition)
         
         Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas. 
         Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz.
