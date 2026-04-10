@@ -203,13 +203,13 @@ if autenticacao():
 
     elif escolha == "SOBRE O APP":
 
-        st.subheader("📱 Sobre o SGM Automotiva")
+        st.subheader("📱 SOBRE O SGM AUTOMOTIVA")
 
         st.markdown(f"""
 
-        **Desenvolvedor:** Jonas Costa  
+        **Desenvolvedor:** JONAS COSTA - [LinkedIn](https://www.linkedin.com/in/jonascosta/) | [GitHub]( 
 
-        **Versão:** 1.9.1 (Beta Edition)
+        **VERSÃO:** 1.9.1 (Beta Edition)
 
        
 
