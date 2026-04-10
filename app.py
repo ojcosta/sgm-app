@@ -129,7 +129,7 @@ if autenticacao():
                     'DAATA': str(data),
                     'PLACA': placa,
                     'MARCA': marca, 
-                    'MODELO': f"{modelo} {ano}",
+                    'MODELO': f"{modelo} {any}",
                     'PROPIETÁRIO': proprietario,
                     'SERVIÇO': servico_item,
                     'CUSTO (R$)': custo_item,
