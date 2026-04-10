@@ -10,7 +10,6 @@ st.set_page_config(page_title="SGM Automotiva", layout="wide", page_icon="🚘")
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def carregar_dados():
-    # Resetar o cache garante que o app sempre leia a versão mais recente da planilha
     conn.reset()
     try:
         dados = conn.read(ttl=0)
@@ -101,11 +100,11 @@ if autenticacao():
         col1, col2 = st.columns(2)
         with col1:
             data_input = st.date_input("DATA", datetime.now(), disabled=travado)
-            modelo_input = st.text_input("MODELO E ANO", disabled=travado)
-            proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado)
+            modelo_input = st.text_input("MODELO E ANO", disabled=travado, key="modelo")
+            proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado, key="prop")
         with col2:
             marca_input = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
-            placa_input = st.text_input("PLACA", disabled=travado).upper()
+            placa_input = st.text_input("PLACA", disabled=travado, key="placa").upper()
 
         st.divider()
 
@@ -120,21 +119,22 @@ if autenticacao():
         with c4:
             responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
         
-        motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES")
+        motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES", key="diag")
 
         if st.button("➕ ADICIONAR MAIS SERVIÇOS"):
-            if placa_input and modelo_input and motivo_item:
+            # A validação agora remove espaços e garante que o texto existe de fato
+            if placa_input.strip() and modelo_input.strip() and motivo_item.strip():
                 novo_item = {
                     'OS': st.session_state.proxima_os,
                     'DATA': str(data_input),
-                    'PLACA': placa_input,
+                    'PLACA': placa_input.strip(),
                     'MARCA': marca_input, 
-                    'MODELO/ANO': modelo_input,
-                    'PROPRIETÁRIO': proprietario_input,
+                    'MODELO/ANO': modelo_input.strip(),
+                    'PROPRIETÁRIO': proprietario_input.strip(),
                     'SERVIÇO': servico_item,
                     'CUSTO (R$)': custo_item,
                     'PAGAMENTO (R$)': pagamento_item,
-                    'DIAGNÓSTICO': motivo_item,
+                    'DIAGNÓSTICO': motivo_item.strip(),
                     'MECÂNICO': responsavel_os
                 }
                 st.session_state.lista_servicos_temp.append(novo_item)
@@ -155,7 +155,6 @@ if autenticacao():
             with col_btn1:
                 if st.button("💾 Finalizar e Salvar na Nuvem", type="primary", use_container_width=True):
                     with st.status("📦 Enviando para Google Sheets...", expanded=True) as status:
-                        # Recarrega os dados antes de salvar para garantir que nada seja sobrescrito
                         df_nuvem = carregar_dados()
                         df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
                         conn.update(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"], data=df_final)
