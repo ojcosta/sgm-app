@@ -202,10 +202,21 @@ if autenticacao():
             )
 
     elif escolha == "SOBRE O APP":
+
         st.subheader("📱 Sobre o SGM Automotiva")
+
         st.markdown(f"""
+
         **Desenvolvedor:** Jonas Costa  
+
         **Versão:** 1.9.1 (Beta Edition)
+
+       
+
+        Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas.
+
+        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz. O App é instável e necessita constatemente de atualizações, correções e melhorias. Agradecemos a compreensão e o feedback de todos os usuários para tornar o SGM Automotiva cada vez melhor!
+
         """)
 
     st.sidebar.markdown("---")
