@@ -14,7 +14,7 @@ def carregar_dados():
         dados = conn.read(ttl=0)
         colunas_necessarias = ['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO']
         
-        if dados.empty:
+        if dados is None or dados.empty:
             return pd.DataFrame(columns=colunas_necessarias)
         
         for col in colunas_necessarias:
@@ -85,7 +85,6 @@ if autenticacao():
     if escolha == "REGISTRAR O.S":
         st.subheader("📝 REGISTRAR ORDEM DE SERVIÇO")
         
-        # 1. Inicialização da Lista Temporária e ID da OS
         if "lista_servicos_temp" not in st.session_state:
             st.session_state.lista_servicos_temp = []
             try:
@@ -95,22 +94,19 @@ if autenticacao():
             
         st.info(f"📌 Ordem de Serviço atual: **{st.session_state.proxima_os}**")
         
-        # --- SEÇÃO 1: DADOS DO VEÍCULO (CONGELAM APÓS ADICIONAR 1º SERVIÇO) ---
-        # Definimos se os campos devem ser travados
         travado = len(st.session_state.lista_servicos_temp) > 0
         
         col1, col2 = st.columns(2)
         with col1:
-            data = st.date_input("DATA", datetime.now(), disabled=travado)
-            modelo = st.text_input("MODELO E ANO", disabled=travado)
-            proprietario = st.text_input("PROPIETÁRIO", disabled=travado)
+            data_input = st.date_input("DATA", datetime.now(), disabled=travado)
+            modelo_input = st.text_input("MODELO E ANO", disabled=travado)
+            proprietario_input = st.text_input("PROPIETÁRIO", disabled=travado)
         with col2:
-            marca = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
-            placa = st.text_input("PLACA (ABC1234 / ABC1D23)", disabled=travado).upper()
+            marca_input = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
+            placa_input = st.text_input("PLACA", disabled=travado).upper()
 
         st.divider()
 
-        # --- SEÇÃO 2: ADIÇÃO DE SERVIÇOS (MÚLTIPLOS ITENS) ---
         st.markdown("### 🛠️ ADICIONAR SERVIÇO")
         c1, c2, c3 = st.columns([3, 2, 1])
         with c1:
@@ -123,14 +119,14 @@ if autenticacao():
         motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES")
 
         if st.button("➕ ADICIONAR MAIS SERVIÇOS"):
-            if placa and modelo and motivo_item:
+            if placa_input and modelo_input and motivo_item:
                 novo_item = {
                     'OS': st.session_state.proxima_os,
-                    'DAATA': str(data),
-                    'PLACA': placa,
-                    'MARCA': marca, 
-                    'MODELO': f"{modelo} {any}",
-                    'PROPIETÁRIO': proprietario,
+                    'DATA': str(data_input),
+                    'PLACA': placa_input,
+                    'MARCA': marca_input, 
+                    'MODELO/ANO': modelo_input,
+                    'PROPIETÁRIO': proprietario_input,
                     'SERVIÇO': servico_item,
                     'CUSTO (R$)': custo_item,
                     'DIAGNÓSTICO': motivo_item,
@@ -142,14 +138,13 @@ if autenticacao():
             else:
                 st.error("⚠️ Preencha os dados do veículo e o diagnóstico.")
 
-        # --- SEÇÃO 3: RESUMO E FINALIZAÇÃO ---
         if st.session_state.lista_servicos_temp:
             st.markdown("---")
             st.markdown("### 📋 Resumo da OS")
             df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
-            st.dataframe(df_temp[['Serviço', 'Custo (R$)', 'Diagnóstico']], use_container_width=True)
+            st.dataframe(df_temp[['SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO']], use_container_width=True)
             
-            st.write(f"**Total acumulado: R$ {df_temp['Custo (R$)'].sum():.2f}**")
+            st.write(f"**Total acumulado: R$ {df_temp['CUSTO (R$)'].sum():.2f}**")
 
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
@@ -159,7 +154,7 @@ if autenticacao():
                         conn.update(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"], data=df_final)
                         status.update(label="✅ OS Salva com Sucesso!", state="complete", expanded=False)
                     
-                    st.session_state.lista_servicos_temp = [] # Limpa a lista
+                    st.session_state.lista_servicos_temp = [] 
                     st.balloons()
                     st.rerun()
             
@@ -167,17 +162,17 @@ if autenticacao():
                 if st.button("🗑️ Cancelar OS", use_container_width=True):
                     st.session_state.lista_servicos_temp = []
                     st.rerun()
+
     elif escolha == "HISTÓRICO E FINANCEIRO":
         st.subheader("🔍 CONSULTA E INTELIGÊNCIA DE NEGÓCIO")
         
         if df.empty or len(df.columns) < 2:
             st.info("NENHUM REGISTRO ENCONTRADO.")
         else:
-            # --- DASHBOARD DE MÉTRICAS ---
-            custos_numericos = pd.to_numeric(df['Custo (R$)'], errors='coerce').fillna(0)
+            custos_numericos = pd.to_numeric(df['CUSTO (R$)'], errors='coerce').fillna(0)
             total_geral = custos_numericos.sum()
             ticket_medio = total_geral / len(df) if len(df) > 0 else 0
-            servico_pop = df['Serviço'].mode()[0] if not df['Serviço'].empty else "N/A"
+            servico_pop = df['SERVIÇO'].mode()[0] if not df['SERVIÇO'].empty else "N/A"
 
             m1, m2, m3 = st.columns(3)
             m1.metric("Faturamento Total", f"R$ {total_geral:,.2f}")
@@ -186,27 +181,21 @@ if autenticacao():
             
             st.write("---")
             
-            # --- FILTROS ---
-            c_filtro1, c_filtro2 = st.columns([2, 1])
-            with c_filtro1:
-                busca = st.text_input("Buscar por Placa ou OS:").upper()
-            with c_filtro2:
-                filtro_mec = st.selectbox("Filtrar por Mecânico", ["Todos"] + LISTA_MECANICOS)
+            busca = st.text_input("Buscar por Placa ou OS:").upper()
+            filtro_mec = st.selectbox("Filtrar por Mecânico", ["Todos"] + LISTA_MECANICOS)
 
-            # Aplicando filtros
             df_filtrado = df.copy()
             if busca:
-                df_filtrado = df_filtrado[(df_filtrado['Placa'].astype(str).str.contains(busca)) | (df_filtrado['OS'].astype(str).str.contains(busca))]
+                df_filtrado = df_filtrado[(df_filtrado['PLACA'].astype(str).str.contains(busca)) | (df_filtrado['OS'].astype(str).str.contains(busca))]
             if filtro_mec != "Todos":
-                df_filtrado = df_filtrado[df_filtrado['Responsável'] == filtro_mec]
+                df_filtrado = df_filtrado[df_filtrado['MECÂNICO'] == filtro_mec]
 
-            # --- TABELA FORMATADA ---
             st.dataframe(
                 df_filtrado.sort_values(by='OS', ascending=False),
                 use_container_width=True,
                 column_config={
-                    "Custo (R$)": st.column_config.NumberColumn("Custo", format="R$ %.2f"),
-                    "Data": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
+                    "CUSTO (R$)": st.column_config.NumberColumn("Custo", format="R$ %.2f"),
+                    "DATA": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
                     "OS": st.column_config.NumberColumn("OS", format="%d")
                 },
                 hide_index=True
@@ -217,9 +206,6 @@ if autenticacao():
         st.markdown(f"""
         **Desenvolvedor:** Jonas Costa  
         **Versão:** 1.9.1 (Beta Edition)
-        
-        Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas. 
-        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz. O App é instável e necessita constatemente de atualizações, correções e melhorias. Agradecemos a compreensão e o feedback de todos os usuários para tornar o SGM Automotiva cada vez melhor!
         """)
 
     st.sidebar.markdown("---")
