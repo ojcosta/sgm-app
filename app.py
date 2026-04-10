@@ -167,42 +167,72 @@ if autenticacao():
                     st.rerun()
 
     elif escolha == "HISTÓRICO E FINANCEIRO":
-        st.subheader("🔍 CONSULTA E INTELIGÊNCIA DE NEGÓCIO")
+    st.subheader("🔍 CONSULTA E INTELIGÊNCIA DE NEGÓCIO")
+    
+    if df.empty or len(df.columns) < 2:
+        st.info("NENHUM REGISTRO ENCONTRADO.")
+    else:
+        # --- SEÇÃO DE FILTROS ---
+        st.markdown("### 📅 Filtros de Busca")
+        c_data1, c_data2, c_data3 = st.columns(3)
         
-        if df.empty or len(df.columns) < 2:
-            st.info("NENHUM REGISTRO ENCONTRADO.")
-        else:
-            custos_numericos = pd.to_numeric(df['CUSTO (R$)'], errors='coerce').fillna(0)
-            total_geral = custos_numericos.sum()
-            ticket_medio = total_geral / len(df) if len(df) > 0 else 0
-            servico_pop = df['SERVIÇO'].mode()[0] if not df['SERVIÇO'].empty else "N/A"
+        # Converte a coluna DATA para datetime para facilitar a filtragem
+        df['DATA_DT'] = pd.to_datetime(df['DATA'], errors='coerce')
+        
+        with c_data1:
+            filtro_dia = st.multiselect("Dia", options=sorted(df['DATA_DT'].dt.day.dropna().unique().astype(int)))
+        with c_data2:
+            filtro_mes = st.multiselect("Mês", options=sorted(df['DATA_DT'].dt.month.dropna().unique().astype(int)))
+        with c_data3:
+            filtro_ano = st.multiselect("Ano", options=sorted(df['DATA_DT'].dt.year.dropna().unique().astype(int)))
 
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Faturamento Total", f"R$ {total_geral:,.2f}")
-            m2.metric("Ticket Médio", f"R$ {ticket_medio:,.2f}")
-            m3.metric("Serviço Frequente", servico_pop)
-            
-            st.write("---")
-            
-            busca = st.text_input("Buscar por Placa ou OS:").upper()
+        c_busca1, c_busca2, c_busca3 = st.columns(3)
+        with c_busca1:
+            busca_placa_os = st.text_input("Buscar por Placa ou OS:").upper()
+        with c_busca2:
             filtro_mec = st.selectbox("Filtrar por Mecânico", ["Todos"] + LISTA_MECANICOS)
+        
+        # --- APLICANDO OS FILTROS NO DATAFRAME ---
+        df_filtrado = df.copy()
+        
+        if filtro_dia:
+            df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.day.isin(filtro_dia)]
+        if filtro_mes:
+            df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.month.isin(filtro_mes)]
+        if filtro_ano:
+            df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.year.isin(filtro_ano)]
+        if busca_placa_os:
+            df_filtrado = df_filtrado[(df_filtrado['PLACA'].astype(str).str.contains(busca_placa_os)) | 
+                                      (df_filtrado['OS'].astype(str).str.contains(busca_placa_os))]
+        if filtro_mec != "Todos":
+            df_filtrado = df_filtrado[df_filtrado['MECÂNICO'] == filtro_mec]
 
-            df_filtrado = df.copy()
-            if busca:
-                df_filtrado = df_filtrado[(df_filtrado['PLACA'].astype(str).str.contains(busca)) | (df_filtrado['OS'].astype(str).str.contains(busca))]
-            if filtro_mec != "Todos":
-                df_filtrado = df_filtrado[df_filtrado['MECÂNICO'] == filtro_mec]
+        # --- DASHBOARD DE MÉTRICAS DINÂMICAS ---
+        st.write("---")
+        # Conversão numérica para cálculos seguros
+        custos_total = pd.to_numeric(df_filtrado['CUSTO (R$)'], errors='coerce').sum()
+        pagamentos_total = pd.to_numeric(df_filtrado['PAGAMENTO (R$)'], errors='coerce').sum()
+        saldo_liquido = pagamentos_total - custos_total
 
-            st.dataframe(
-                df_filtrado.sort_values(by='OS', ascending=False),
-                use_container_width=True,
-                column_config={
-                    "CUSTO (R$)": st.column_config.NumberColumn("CUSTO", format="R$ %.2f"),
-                    "DATA": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
-                    "OS": st.column_config.NumberColumn("OS", format="%d")
-                },
-                hide_index=True
-            )
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Faturamento (Entrada)", f"R$ {pagamentos_total:,.2f}")
+        m2.metric("Custo de Reparo (Saída)", f"R$ {custos_total:,.2f}")
+        m3.metric("Saldo Líquido", f"R$ {saldo_liquido:,.2f}", delta_color="normal")
+        
+        st.write("---")
+
+        # --- TABELA DE RESULTADOS ---
+        st.dataframe(
+            df_filtrado.drop(columns=['DATA_DT']).sort_values(by='OS', ascending=False),
+            use_container_width=True,
+            column_config={
+                "CUSTO (R$)": st.column_config.NumberColumn("Custo", format="R$ %.2f"),
+                "PAGAMENTO (R$)": st.column_config.NumberColumn("Pagamento", format="R$ %.2f"),
+                "DATA": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
+                "OS": st.column_config.NumberColumn("OS", format="%d")
+            },
+            hide_index=True
+        )
 
     elif escolha == "SOBRE O APP":
 
