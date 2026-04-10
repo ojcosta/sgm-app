@@ -82,7 +82,7 @@ if autenticacao():
 
     df = carregar_dados()
 
-    if escolha == "Registrar Novo Serviço":
+    if escolha == "REGISTRAR O.S":
         st.subheader("📝 Registrar Ordem de Serviço")
         
         # 1. Inicialização da Lista Temporária e ID da OS
@@ -167,7 +167,7 @@ if autenticacao():
                 if st.button("🗑️ Cancelar OS", use_container_width=True):
                     st.session_state.lista_servicos_temp = []
                     st.rerun()
-    elif escolha == "Histórico e Financeiro":
+    elif escolha == "HISTÓRICO E FINANCEIRO":
         st.subheader("🔍 Consulta e Inteligência de Negócio")
         
         if df.empty or len(df.columns) < 2:
@@ -212,7 +212,7 @@ if autenticacao():
                 hide_index=True
             )
 
-    elif escolha == "Sobre o APP":
+    elif escolha == "SOBRE O APP":
         st.subheader("📱 Sobre o SGM Automotiva")
         st.markdown(f"""
         **Desenvolvedor:** Jonas Costa  
