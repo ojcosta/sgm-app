@@ -44,7 +44,7 @@ def autenticacao():
         st.session_state.logado = False
 
     if not st.session_state.logado:
-        st.sidebar.markdown("# 🔐 Portal SGM")
+        st.sidebar.markdown("# 🔐 Portal SGMa")
         usuario_input = st.sidebar.text_input("Usuário")
         senha_input = st.sidebar.text_input("Senha", type="password")
         
