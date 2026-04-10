@@ -10,9 +10,11 @@ st.set_page_config(page_title="SGM Automotiva", layout="wide", page_icon="🚘")
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def carregar_dados():
+    # Resetar o cache garante que o app sempre leia a versão mais recente da planilha
+    conn.reset()
     try:
         dados = conn.read(ttl=0)
-        colunas_necessarias = ['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)','PAGAMENTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO']
+        colunas_necessarias = ['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO']
         
         if dados is None or dados.empty:
             return pd.DataFrame(columns=colunas_necessarias)
@@ -22,7 +24,7 @@ def carregar_dados():
                 dados[col] = None
         return dados
     except:
-        return pd.DataFrame(columns=['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO'])
+        return pd.DataFrame(columns=['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO'])
 
 # --- LISTAS DE OPÇÕES ---
 LISTA_SERVICOS = [
@@ -64,7 +66,7 @@ def autenticacao():
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Status", "Online")
-            c2.metric("Versão", "1.9.1b")
+            c2.metric("Versão", "0.9.1b")
             c3.metric("Suporte", "Ativo")
             
         return False
@@ -108,15 +110,15 @@ if autenticacao():
         st.divider()
 
         st.markdown("### 🛠️ ADICIONAR SERVIÇO")
-        c1, c2, c3, c4 = st.columns([4, 3, 2, 1])
+        c1, c2, c3, c4 = st.columns([4, 2, 2, 2])
         with c1:
             servico_item = st.selectbox("SERVIÇO REALIZADO", LISTA_SERVICOS)
         with c2:
             custo_item = st.number_input("CUSTO DO REPARO (R$)", min_value=0.0, step=10.0, format="%.2f")
         with c3:
-            responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
-        with c4:
             pagamento_item = st.number_input("PAGAMENTO RECEBIDO (R$)", min_value=0.0, step=10.0, format="%.2f")
+        with c4:
+            responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
         
         motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES")
 
@@ -145,7 +147,7 @@ if autenticacao():
             st.markdown("---")
             st.markdown("### 📋 Resumo da OS")
             df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
-            st.dataframe(df_temp[['SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO']], use_container_width=True)
+            st.dataframe(df_temp[['SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'DIAGNÓSTICO']], use_container_width=True)
             
             st.write(f"**Total acumulado: R$ {df_temp['CUSTO (R$)'].sum():.2f}**")
 
@@ -153,7 +155,9 @@ if autenticacao():
             with col_btn1:
                 if st.button("💾 Finalizar e Salvar na Nuvem", type="primary", use_container_width=True):
                     with st.status("📦 Enviando para Google Sheets...", expanded=True) as status:
-                        df_final = pd.concat([df, df_temp], ignore_index=True)
+                        # Recarrega os dados antes de salvar para garantir que nada seja sobrescrito
+                        df_nuvem = carregar_dados()
+                        df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
                         conn.update(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"], data=df_final)
                         status.update(label="✅ OS Salva com Sucesso!", state="complete", expanded=False)
                     
@@ -172,10 +176,7 @@ if autenticacao():
         if df.empty or len(df.columns) < 2:
             st.info("NENHUM REGISTRO ENCONTRADO.")
         else:
-            # --- SEÇÃO DE FILTROS ---
             st.markdown("### 📅 Filtros de Busca")
-            
-            # Garantir que a coluna DATA seja tratada como data
             df['DATA_DT'] = pd.to_datetime(df['DATA'], errors='coerce')
             
             c_data1, c_data2, c_data3 = st.columns(3)
@@ -192,27 +193,17 @@ if autenticacao():
             with c_busca2:
                 filtro_mec = st.selectbox("Filtrar por Mecânico", ["Todos"] + LISTA_MECANICOS)
             
-            # --- APLICANDO OS FILTROS NO DATAFRAME ---
             df_filtrado = df.copy()
-            
-            if filtro_dia:
-                df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.day.isin(filtro_dia)]
-            if filtro_mes:
-                df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.month.isin(filtro_mes)]
-            if filtro_ano:
-                df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.year.isin(filtro_ano)]
+            if filtro_dia: df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.day.isin(filtro_dia)]
+            if filtro_mes: df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.month.isin(filtro_mes)]
+            if filtro_ano: df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.year.isin(filtro_ano)]
             if busca_placa_os:
-                # Busca simultânea em Placa e OS
-                df_filtrado = df_filtrado[
-                    (df_filtrado['PLACA'].astype(str).str.contains(busca_placa_os)) | 
-                    (df_filtrado['OS'].astype(str).str.contains(busca_placa_os))
-                ]
+                df_filtrado = df_filtrado[(df_filtrado['PLACA'].astype(str).str.contains(busca_placa_os)) | 
+                                          (df_filtrado['OS'].astype(str).str.contains(busca_placa_os))]
             if filtro_mec != "Todos":
                 df_filtrado = df_filtrado[df_filtrado['MECÂNICO'] == filtro_mec]
 
-            # --- DASHBOARD DE MÉTRICAS DINÂMICAS ---
             st.write("---")
-            # Conversão para números para evitar erros de cálculo
             custos_total = pd.to_numeric(df_filtrado['CUSTO (R$)'], errors='coerce').sum()
             pagamentos_total = pd.to_numeric(df_filtrado['PAGAMENTO (R$)'], errors='coerce').sum()
             saldo_liquido = pagamentos_total - custos_total
@@ -220,13 +211,9 @@ if autenticacao():
             m1, m2, m3 = st.columns(3)
             m1.metric("Faturamento (Entrada)", f"R$ {pagamentos_total:,.2f}")
             m2.metric("Custo de Reparo (Saída)", f"R$ {custos_total:,.2f}")
-            # O Delta mostra se você está no lucro (verde) ou prejuízo (vermelho)
             st.metric("Saldo Líquido", f"R$ {saldo_liquido:,.2f}", delta=f"{saldo_liquido:,.2f}")
             
             st.write("---")
-
-            # --- TABELA DE RESULTADOS ---
-            # Removemos a coluna auxiliar 'DATA_DT' antes de mostrar para o usuário
             st.dataframe(
                 df_filtrado.drop(columns=['DATA_DT'], errors='ignore').sort_values(by='OS', ascending=False),
                 use_container_width=True,
@@ -240,22 +227,12 @@ if autenticacao():
             )
 
     elif escolha == "SOBRE O APP":
-
         st.subheader("📱 SOBRE O SGM AUTOMOTIVA")
-
         st.markdown(f"""
-
-        **DESENVOLVEDOR:** JONAS COSTA
-
-        **VERSÃO:** 1.9.1 (Beta Edition)
-
-       
-
+        **DESENVOLVEDOR:** JONAS COSTA  
+        **VERSÃO:** 0.9.1 (Beta Edition)  
         Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas.
-
-        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz. O App é instável e necessita constatemente de atualizações, correções e melhorias. Agradecemos a compreensão e o feedback de todos os usuários para tornar o SGM Automotiva cada vez melhor!
-
         """)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("SGM Automotiva v1.9.1 - BETA EDITION 🚀")
+    st.sidebar.caption("SGM Automotiva v0.9.1 - BETA EDITION 🚀")
