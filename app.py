@@ -64,7 +64,7 @@ def autenticacao():
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Status", "Online")
-            c2.metric("Versão", "1.9.1 (Beta)")
+            c2.metric("Versão", "1.9.1b")
             c3.metric("Suporte", "Ativo")
             
         return False
