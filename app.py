@@ -12,7 +12,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def carregar_dados():
     try:
         dados = conn.read(ttl=0)
-        colunas_necessarias = ['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO']
+        colunas_necessarias = ['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO']
         
         if dados is None or dados.empty:
             return pd.DataFrame(columns=colunas_necessarias)
@@ -22,7 +22,7 @@ def carregar_dados():
                 dados[col] = None
         return dados
     except:
-        return pd.DataFrame(columns=['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO'])
+        return pd.DataFrame(columns=['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO'])
 
 # --- LISTAS DE OPÇÕES ---
 LISTA_SERVICOS = [
@@ -100,7 +100,7 @@ if autenticacao():
         with col1:
             data_input = st.date_input("DATA", datetime.now(), disabled=travado)
             modelo_input = st.text_input("MODELO E ANO", disabled=travado)
-            proprietario_input = st.text_input("PROPIETÁRIO", disabled=travado)
+            proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado)
         with col2:
             marca_input = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
             placa_input = st.text_input("PLACA", disabled=travado).upper()
@@ -126,7 +126,7 @@ if autenticacao():
                     'PLACA': placa_input,
                     'MARCA': marca_input, 
                     'MODELO/ANO': modelo_input,
-                    'PROPIETÁRIO': proprietario_input,
+                    'PROPRIETÁRIO': proprietario_input,
                     'SERVIÇO': servico_item,
                     'CUSTO (R$)': custo_item,
                     'DIAGNÓSTICO': motivo_item,
@@ -207,7 +207,7 @@ if autenticacao():
 
         st.markdown(f"""
 
-        **Desenvolvedor:** JONAS COSTA - [LinkedIn](https://www.linkedin.com/in/jonascosta/) | [GitHub]( 
+        **DESENVOLVEDOR:** JONAS COSTA
 
         **VERSÃO:** 1.9.1 (Beta Edition)
 
