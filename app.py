@@ -83,7 +83,7 @@ if autenticacao():
     df = carregar_dados()
 
     if escolha == "REGISTRAR O.S":
-        st.subheader("📝 Registrar Ordem de Serviço")
+        st.subheader("📝 REGISTRAR ORDEM DE SERVIÇO")
         
         # 1. Inicialização da Lista Temporária e ID da OS
         if "lista_servicos_temp" not in st.session_state:
@@ -101,28 +101,28 @@ if autenticacao():
         
         col1, col2 = st.columns(2)
         with col1:
-            data = st.date_input("Data do Serviço", datetime.now(), disabled=travado)
-            modelo = st.text_input("Modelo e Ano do Veículo", disabled=travado)
-            proprietario = st.text_input("Proprietário do Veículo", disabled=travado)
+            data = st.date_input("DATA", datetime.now(), disabled=travado)
+            modelo = st.text_input("MODELO E ANO", disabled=travado)
+            proprietario = st.text_input("PROPIETÁRIO", disabled=travado)
         with col2:
-            marca = st.selectbox("Marca", LISTA_MARCA, disabled=travado)
-            placa = st.text_input("Placa do Veículo (ABC1234 / ABC1D23)", disabled=travado).upper()
+            marca = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
+            placa = st.text_input("PLACA (ABC1234 / ABC1D23)", disabled=travado).upper()
 
         st.divider()
 
         # --- SEÇÃO 2: ADIÇÃO DE SERVIÇOS (MÚLTIPLOS ITENS) ---
-        st.markdown("### 🛠️ Adicionar Serviço/Defeito")
+        st.markdown("### 🛠️ ADICIONAR SERVIÇO")
         c1, c2, c3 = st.columns([3, 2, 1])
         with c1:
-            servico_item = st.selectbox("Serviço Realizado", LISTA_SERVICOS)
+            servico_item = st.selectbox("SERVIÇO REALIZADO", LISTA_SERVICOS)
         with c2:
-            custo_item = st.number_input("Custo deste Item (R$)", min_value=0.0, step=10.0, format="%.2f")
+            custo_item = st.number_input("CUSTO DESTE ITEM (R$)", min_value=0.0, step=10.0, format="%.2f")
         with c3:
-            responsavel_os = st.selectbox("Mecânico Responsável", LISTA_MECANICOS)
+            responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
         
-        motivo_item = st.text_area("Diagnóstico e Observações deste item")
+        motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES")
 
-        if st.button("➕ Adicionar à mesma OS"):
+        if st.button("➕ ADICIONAR MAIS SERVIÇOS"):
             if placa and modelo and motivo_item:
                 novo_item = {
                     'OS': st.session_state.proxima_os,
@@ -168,10 +168,10 @@ if autenticacao():
                     st.session_state.lista_servicos_temp = []
                     st.rerun()
     elif escolha == "HISTÓRICO E FINANCEIRO":
-        st.subheader("🔍 Consulta e Inteligência de Negócio")
+        st.subheader("🔍 CONSULTA E INTELIGÊNCIA DE NEGÓCIO")
         
         if df.empty or len(df.columns) < 2:
-            st.info("Nenhum registro encontrado.")
+            st.info("NENHUM REGISTRO ENCONTRADO.")
         else:
             # --- DASHBOARD DE MÉTRICAS ---
             custos_numericos = pd.to_numeric(df['Custo (R$)'], errors='coerce').fillna(0)
