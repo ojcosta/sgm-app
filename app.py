@@ -64,7 +64,7 @@ def autenticacao():
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Status", "Online")
-            c2.metric("Versão", "9.1")
+            c2.metric("Versão", "1.9.1 (Beta)")
             c3.metric("Suporte", "Ativo")
             
         return False
@@ -216,11 +216,11 @@ if autenticacao():
         st.subheader("📱 Sobre o SGM Automotiva")
         st.markdown(f"""
         **Desenvolvedor:** Jonas Costa  
-        **Versão:** 9.1 (Enterprise Edition)
+        **Versão:** 1.9.1 (Beta Edition)
         
         Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas. 
-        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz.
+        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz. O App é instável e necessita constatemente de atualizações, correções e melhorias. Agradecemos a compreensão e o feedback de todos os usuários para tornar o SGM Automotiva cada vez melhor!
         """)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("SGM Automotiva v9.1 - Correções de Bugs e melhorias de estabilidade")
+    st.sidebar.caption("SGM Automotiva v1.9.1 - BETA EDITION 🚀")
