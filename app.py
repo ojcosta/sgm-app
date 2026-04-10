@@ -112,7 +112,7 @@ if autenticacao():
         with c1:
             servico_item = st.selectbox("SERVIÇO REALIZADO", LISTA_SERVICOS)
         with c2:
-            custo_item = st.number_input("CUSTO DESTE ITEM (R$)", min_value=0.0, step=10.0, format="%.2f")
+            custo_item = st.number_input("CUSTO DO REPARO (R$)", min_value=0.0, step=10.0, format="%.2f")
         with c3:
             responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
         with c4:
