@@ -90,9 +90,7 @@ if autenticacao():
             st.session_state.lista_servicos_temp = []
             try:
                 ultima_os = pd.to_numeric(df['OS'], errors='coerce').max()
-                if pd.isna(ultima_os):
-                    st.session_state.proxima_os = 1
-                else st.session_state.proxima_os = int(ultima_os) + 1
+                st.session_state.proxima_os = int(ultima_os + 1) if not pd.isna(ultima_os) else 1
             except:
                 st.session_state.proxima_os = len(df) + 1
             
@@ -125,7 +123,6 @@ if autenticacao():
         motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES", key="diag")
 
         if st.button("➕ ADICIONAR MAIS SERVIÇOS"):
-            # A validação agora remove espaços e garante que o texto existe de fato
             if placa_input.strip() and modelo_input.strip() and motivo_item.strip():
                 novo_item = {
                     'OS': st.session_state.proxima_os,
