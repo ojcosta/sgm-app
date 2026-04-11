@@ -4,7 +4,7 @@ from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
 # --- CONFIGURAÇÕES INICIAIS ---
-st.set_page_config(page_title="SGM Automotiva", layout="wide", page_icon="🚘")
+st.set_page_config(page_title="SGM AUTOMOTIVA", layout="wide", page_icon="🚘")
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -38,24 +38,24 @@ LISTA_MARCA = [
 # --- SISTEMA DE LOGIN ---
 def autenticacao():
     USUARIOS_PERMITIDOS = {
-        "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", "oficina": "1234", "pedrobueno": "oficina1234", "davifraga": "oficina1234"
+        "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", "oficina": "1234", "pedrobueno": "oficina1234", "davifraga": "oficina1234", "fabiomoraes": "oficina1234"
     }
     
     if "logado" not in st.session_state:
         st.session_state.logado = False
 
     if not st.session_state.logado:
-        st.sidebar.markdown("# 🔐 Portal SGMa")
-        usuario_input = st.sidebar.text_input("Usuário")
-        senha_input = st.sidebar.text_input("Senha", type="password")
+        st.sidebar.markdown("# 🔐 PORTAL SGMa")
+        usuario_input = st.sidebar.text_input("USUÁRIO")
+        senha_input = st.sidebar.text_input("SENHA", type="password")
         
-        if st.sidebar.button("Entrar no Sistema", use_container_width=True):
+        if st.sidebar.button("ENTRAR NO SISTEMA", use_container_width=True):
             if usuario_input in USUARIOS_PERMITIDOS and USUARIOS_PERMITIDOS[usuario_input] == senha_input:
                 st.session_state.logado = True
                 st.session_state.usuario_nome = usuario_input
                 st.rerun()
             else:
-                st.sidebar.error("⚠️ Usuário ou senha inválidos")
+                st.sidebar.error("⚠️ USUÁRIO OU SENHA INVÁLIDOS.")
 
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
@@ -74,12 +74,12 @@ def autenticacao():
 # --- EXECUÇÃO DO SISTEMA ---
 if autenticacao():
     st.sidebar.write(f"Logado como: **{st.session_state.usuario_nome}**")
-    if st.sidebar.button("Sair / Logout"):
+    if st.sidebar.button("Logout"):
         st.session_state.logado = False
         st.rerun()
 
     menu = ["REGISTRAR O.S", "HISTÓRICO E FINANCEIRO", "SOBRE O APP"]
-    escolha = st.sidebar.selectbox("Menu de Navegação:", menu)
+    escolha = st.sidebar.selectbox("MENU DE NAVEGAÇÃO:", menu)
 
     df = carregar_dados()
 
@@ -94,7 +94,7 @@ if autenticacao():
             except:
                 st.session_state.proxima_os = len(df) + 1
             
-        st.info(f"📌 Ordem de Serviço atual: **{st.session_state.proxima_os}**")
+        st.info(f"📌 ORDEM DE SERVIÇO ATUAL: **{st.session_state.proxima_os}**")
         
         travado = len(st.session_state.lista_servicos_temp) > 0
         
@@ -141,7 +141,7 @@ if autenticacao():
                 st.toast("Item adicionado com sucesso!")
                 st.rerun()
             else:
-                st.error("⚠️ Preencha os dados do veículo e o diagnóstico.")
+                st.error("⚠️ PREENCHA OS DADOS DO VEÍCULO E O DIAGNÓSTICO.")
 
         if st.session_state.lista_servicos_temp:
             st.markdown("---")
@@ -153,19 +153,19 @@ if autenticacao():
 
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
-                if st.button("💾 Finalizar e Salvar na Nuvem", type="primary", use_container_width=True):
-                    with st.status("📦 Enviando para Google Sheets...", expanded=True) as status:
+                if st.button("💾 FINALIZAR E SALVAR NA NUVEM", type="primary", use_container_width=True):
+                    with st.status("📦 ENVIANDO PARA GOOGLE SHEETS...", expanded=True) as status:
                         df_nuvem = carregar_dados()
                         df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
                         conn.update(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"], data=df_final)
-                        status.update(label="✅ OS Salva com Sucesso!", state="complete", expanded=False)
+                        status.update(label="✅ OS SALVA COM SUCESSO!", state="complete", expanded=False)
                     
                     st.session_state.lista_servicos_temp = [] 
                     st.balloons()
                     st.rerun()
             
             with col_btn2:
-                if st.button("🗑️ Cancelar OS", use_container_width=True):
+                if st.button("🗑️ CANCELAR OS", use_container_width=True):
                     st.session_state.lista_servicos_temp = []
                     st.rerun()
 
@@ -175,7 +175,7 @@ if autenticacao():
         if df.empty or len(df.columns) < 2:
             st.info("NENHUM REGISTRO ENCONTRADO.")
         else:
-            st.markdown("### 📅 Filtros de Busca")
+            st.markdown("### 📅 FILTROS DE BUSCA")
             df['DATA_DT'] = pd.to_datetime(df['DATA'], errors='coerce')
             
             c_data1, c_data2, c_data3 = st.columns(3)
@@ -188,9 +188,9 @@ if autenticacao():
 
             c_busca1, c_busca2 = st.columns(2)
             with c_busca1:
-                busca_placa_os = st.text_input("Buscar por Placa ou OS:").upper()
+                busca_placa_os = st.text_input("BUSCAR POR PLACA OU OS:").upper()
             with c_busca2:
-                filtro_mec = st.selectbox("Filtrar por Mecânico", ["Todos"] + LISTA_MECANICOS)
+                filtro_mec = st.selectbox("FILTRAR POR MECÂNICO", ["Todos"] + LISTA_MECANICOS)
             
             df_filtrado = df.copy()
             if filtro_dia: df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.day.isin(filtro_dia)]
@@ -208,9 +208,9 @@ if autenticacao():
             saldo_liquido = pagamentos_total - custos_total
 
             m1, m2, m3 = st.columns(3)
-            m1.metric("Faturamento (Entrada)", f"R$ {pagamentos_total:,.2f}")
-            m2.metric("Custo de Reparo (Saída)", f"R$ {custos_total:,.2f}")
-            st.metric("Saldo Líquido", f"R$ {saldo_liquido:,.2f}", delta=f"{saldo_liquido:,.2f}")
+            m1.metric("FATURAMENTO (ENTRADA)", f"R$ {pagamentos_total:,.2f}")
+            m2.metric("CUSTO DE REPARO (SAÍDA)", f"R$ {custos_total:,.2f}")
+            st.metric("SALDO LÍQUIDO", f"R$ {saldo_liquido:,.2f}", delta=f"{saldo_liquido:,.2f}")
             
             st.write("---")
             st.dataframe(
@@ -229,8 +229,15 @@ if autenticacao():
         st.subheader("📱 SOBRE O SGM AUTOMOTIVA")
         st.markdown(f"""
         **DESENVOLVEDOR:** JONAS COSTA  
-        **VERSÃO:** 0.9.1 (Beta Edition)  
+        **VERSÃO:** 0.9.1 (Beta Edition)
+
+
+
         Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas.
+
+        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz. O App é instável e necessita constatemente de atualizações, correções e melhorias. Agradecemos a compreensão e o feedback de todos os usuários para tornar o SGM Automotiva cada vez melhor!
+
+
         """)
 
     st.sidebar.markdown("---")
