@@ -61,12 +61,12 @@ def autenticacao():
         with col2:
             st.markdown("<br><br>", unsafe_allow_html=True)
             st.markdown("<h1 style='text-align: center;'>🚘 SGM Automotiva</h1>", unsafe_allow_html=True)
-            st.info("**Acesso Restrito.** Use o painel lateral para entrar.")
+            st.info("**ACESSO RESTRITO.** USE O PAINEL LATERAL PARA ENTRAR.")
             
             c1, c2, c3 = st.columns(3)
-            c1.metric("Status", "Online")
-            c2.metric("Versão", "0.9.1b")
-            c3.metric("Suporte", "Ativo")
+            c1.metric("STATUS", "Online")
+            c2.metric("VERSÃO", "0.9.1b")
+            c3.metric("SUPORTE", "Ativo")
             
         return False
     return True
@@ -88,11 +88,13 @@ if autenticacao():
         
         if "lista_servicos_temp" not in st.session_state:
             st.session_state.lista_servicos_temp = []
-            try:
-                ultima_os = pd.to_numeric(df['OS'], errors='coerce').max()
-                st.session_state.proxima_os = int(ultima_os + 1) if not pd.isna(ultima_os) else 1
-            except:
-                st.session_state.proxima_os = len(df) + 1
+            
+        # LÓGICA DE CONTAGEM CORRIGIDA PARA BUSCAR O MAIOR NÚMERO NA PLANILHA
+        try:
+            ultima_os = pd.to_numeric(df['OS'], errors='coerce').max()
+            st.session_state.proxima_os = int(ultima_os + 1) if not pd.isna(ultima_os) else 1
+        except:
+            st.session_state.proxima_os = 1
             
         st.info(f"📌 ORDEM DE SERVIÇO ATUAL: **{st.session_state.proxima_os}**")
         
@@ -145,11 +147,13 @@ if autenticacao():
 
         if st.session_state.lista_servicos_temp:
             st.markdown("---")
-            st.markdown("### 📋 Resumo da OS")
+            st.markdown("### 📋 RESUMO DA OS")
             df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
+            
+            # COLUNAS CORRIGIDAS PARA BATER COM O DICIONÁRIO NOVO_ITEM
             st.dataframe(df_temp[['SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'DIAGNÓSTICO']], use_container_width=True)
             
-            st.write(f"**Total acumulado: R$ {df_temp['CUSTO (R$)'].sum():.2f}**")
+            st.write(f"**TOTAL ACUMULADO: R$ {df_temp['CUSTO (R$)'].sum():.2f}**")
 
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
@@ -210,7 +214,7 @@ if autenticacao():
             m1, m2, m3 = st.columns(3)
             m1.metric("FATURAMENTO (ENTRADA)", f"R$ {pagamentos_total:,.2f}")
             m2.metric("CUSTO DE REPARO (SAÍDA)", f"R$ {custos_total:,.2f}")
-            st.metric("SALDO LÍQUIDO", f"R$ {saldo_liquido:,.2f}", delta=f"{saldo_liquido:,.2f}")
+            m3.metric("SALDO LÍQUIDO", f"R$ {saldo_liquido:,.2f}", delta=f"{saldo_liquido:,.2f}")
             
             st.write("---")
             st.dataframe(
@@ -231,13 +235,9 @@ if autenticacao():
         **DESENVOLVEDOR:** JONAS COSTA  
         **VERSÃO:** 0.9.1 (Beta Edition)
 
-
-
         Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas.
 
         Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz. O App é instável e necessita constatemente de atualizações, correções e melhorias. Agradecemos a compreensão e o feedback de todos os usuários para tornar o SGM Automotiva cada vez melhor!
-
-
         """)
 
     st.sidebar.markdown("---")
