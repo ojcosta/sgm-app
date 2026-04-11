@@ -61,7 +61,7 @@ def autenticacao():
         with col2:
             st.markdown("<br><br>", unsafe_allow_html=True)
             st.markdown("<h1 style='text-align: center;'>🚘 SGM Automotiva</h1>", unsafe_allow_html=True)
-            st.info("**ACESSO RESTrito.** USE O PAINEL LATERAL PARA ENTRAR.")
+            st.info("**ACESSO RESTRITO.** USE O PAINEL LATERAL PARA ENTRAR.")
             
             c1, c2, c3 = st.columns(3)
             c1.metric("STATUS", "Online")
