@@ -38,7 +38,7 @@ LISTA_MARCA = [
 # --- SISTEMA DE LOGIN ---
 def autenticacao():
     USUARIOS_PERMITIDOS = {
-        "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", "oficina": "1234", "pedrobueno": "oficina1234", "davifraga": "oficina1234", "fabiomoraes": "oficina1234","wagnerandrade": "oficina1234";
+        "jonascosta": "MENGo2026@", "rebecaalves": "33091221", "wilsonalves": "RR2026", "oficina": "1234", "pedrobueno": "oficina1234", "davifraga": "oficina1234", "fabiomoraes": "oficina1234","wagnerandrade": "oficina1234"
     }
     
     if "logado" not in st.session_state:
