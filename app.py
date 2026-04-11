@@ -89,7 +89,10 @@ if autenticacao():
         if "lista_servicos_temp" not in st.session_state:
             st.session_state.lista_servicos_temp = []
             try:
-                st.dataframe(df_temp[['SERVIÇO', 'CUSTO (RS)', DIAGNÓSTICO]], use_container_width=True)
+                ultima_os = pd.to_numeric(df['OS'], errors='coerce').max()
+                if pd.isna(ultima_os):
+                    st.session_state.proxima_os = 1
+                else st.session_state.proxima_os = int(ultima_os) + 1
             except:
                 st.session_state.proxima_os = len(df) + 1
             
