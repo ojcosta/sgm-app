@@ -111,10 +111,10 @@ if autenticacao():
         col1, col2 = st.columns(2)
         with col1:
             data_input = st.date_input("DATA", datetime.now(), disabled=travado)
+            marca_input = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
+        with col2:
             modelo_input = st.text_input("MODELO E ANO", disabled=travado, key="modelo")
             proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado, key="prop")
-        with col2:
-            marca_input = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
             placa_input = st.text_input("PLACA", disabled=travado, key="placa").upper()
 
         st.divider()
