@@ -110,17 +110,20 @@ if autenticacao():
         
         col1, col2 = st.columns(2)
         with col1:
-            data_input = st.date_input("DATA", datetime.now(), disabled=travado)
+            data_input = st.date_input("DATA DO SERVIÇO", datetime.now(), disabled=travado)
             marca_input = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
+            modelo_input = st.text_input("MODELO", disabled=travado, key="modelo")
+            quilometragem_input = st.text_input("QUILOMETRAGEM ATUAL", disabled=travado, key="km")
         with col2:
-            modelo_input = st.text_input("MODELO E ANO", disabled=travado, key="modelo")
             proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado, key="prop")
             placa_input = st.text_input("PLACA", disabled=travado, key="placa").upper()
+            ano_input = st.text_input("ANO DE FABRICAÇÃO", disabled=travado, key="ano")
+            chassi_input = st.text_input("CHASSI", disabled=travado, key="chassi").upper()
 
         st.divider()
 
         st.markdown("### 🛠️ ADICIONAR SERVIÇO")
-        c1, c2, c3, c4 = st.columns([4, 2, 2, 2])
+        c1, c2, c3, c4 = st.columns([4, 3, 2, 2])
         with c1:
             servico_item = st.selectbox("SERVIÇO REALIZADO", LISTA_SERVICOS)
         with c2:
