@@ -113,11 +113,11 @@ if autenticacao():
             data_input = st.date_input("DATA DO SERVIÇO", datetime.now(), disabled=travado)
             marca_input = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
             modelo_input = st.text_input("MODELO", disabled=travado, key="modelo")
-            quilometragem_input = st.text_input("QUILOMETRAGEM ATUAL", disabled=travado, key="km")
+            km_input = st.number_input("KM ATUAL", min_value=0, step=1, format="%d", disabled=travado, key="km")
         with col2:
             proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado, key="prop")
             placa_input = st.text_input("PLACA", disabled=travado, key="placa").upper()
-            ano_input = st.text_input("ANO DE FABRICAÇÃO", disabled=travado, key="ano")
+            ano_input = st.number_input("ANO DE FABRICAÇÃO", min_value=0, step=1, format="%d", disabled=travado, key="ano")
             chassi_input = st.text_input("CHASSI", disabled=travado, key="chassi").upper()
 
         st.divider()
