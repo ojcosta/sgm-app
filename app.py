@@ -13,7 +13,7 @@ def carregar_dados():
     conn.reset()
     try:
         dados = conn.read(ttl=0)
-        colunas_necessarias = ['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO']
+        colunas_necessarias = ['OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO', 'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'DIAGNÓSTICO']
         
         if dados is None or dados.empty:
             return pd.DataFrame(columns=colunas_necessarias)
@@ -23,7 +23,7 @@ def carregar_dados():
                 dados[col] = None
         return dados
     except:
-        return pd.DataFrame(columns=['OS', 'DATA', 'PLACA', 'MARCA', 'MODELO/ANO', 'PROPRIETÁRIO', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'DIAGNÓSTICO', 'MECÂNICO'])
+        return pd.DataFrame(columns=['OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO', 'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'DIAGNÓSTICO'])
 
 # --- LISTAS DE OPÇÕES ---
 LISTA_SERVICOS = [
@@ -140,15 +140,18 @@ if autenticacao():
                 novo_item = {
                     'OS': st.session_state.proxima_os,
                     'DATA': str(data_input),
-                    'PLACA': placa_input.strip(),
-                    'MARCA': marca_input, 
-                    'MODELO/ANO': modelo_input.strip(),
+                    'MARCA': marca_input,
+                    'MODELO': modelo_input.strip(),
+                    'KM ATUAL': km_input,
                     'PROPRIETÁRIO': proprietario_input.strip(),
+                    'PLACA': placa_input.strip(),
+                    'ANO DE FABRICAÇÃO': ano_input,
+                    'CHASSI': chassi_input.strip(),
                     'SERVIÇO': servico_item,
                     'CUSTO (R$)': custo_item,
                     'PAGAMENTO (R$)': pagamento_item,
-                    'DIAGNÓSTICO': motivo_item.strip(),
-                    'MECÂNICO': responsavel_os
+                    'MECÂNICO': responsavel_os,
+                    'DIAGNÓSTICO': motivo_item.strip()
                 }
                 st.session_state.lista_servicos_temp.append(novo_item)
                 st.toast("Item adicionado com sucesso!")
@@ -188,7 +191,7 @@ if autenticacao():
         if df.empty or len(df.columns) < 2:
             st.info("NENHUM REGISTRO ENCONTRADO.")
         else:
-            st.markdown("### 📅 FILTROS DE BUSCA")
+            st.markdown("### 📊 FILTROS DE BUSCA")
             df['DATA_DT'] = pd.to_datetime(df['DATA'], errors='coerce')
             
             c_data1, c_data2, c_data3 = st.columns(3)
