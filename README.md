@@ -37,6 +37,7 @@ O **SGM Automotiva** é uma aplicação web desenvolvida para otimizar, centrali
 ```bash
 git clone [https://github.com/ojcosta/SGM-Automotiva.git](https://github.com/ojcosta/SGM-Automotiva.git)
 cd SGM-Automotiva
+```bash
 
 ---
 
