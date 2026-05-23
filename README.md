@@ -44,8 +44,6 @@ cd SGM-Automotiva
 #### 2. Instalar as Dependências
 
 Certifique-se de ter o Python instalado e execute o comando abaixo no seu terminal:
-
-```
 pip install streamlit pandas streamlit-gsheets
 ```
 ---
