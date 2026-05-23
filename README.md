@@ -37,3 +37,29 @@ O **SGM Automotiva** é uma aplicação web desenvolvida para otimizar, centrali
 ```bash
 git clone [https://github.com/SEU_USUARIO/SGM-Automotiva.git](https://github.com/SEU_USUARIO/SGM-Automotiva.git)
 cd SGM-Automotiva
+
+2. Instalar as Dependências
+Certifique-se de ter o Python instalado e execute:
+
+Bash
+pip install streamlit pandas streamlit-gsheets
+
+3. Configurar as Chaves de Acesso (Secrets)
+Crie uma pasta chamada .streamlit na raiz do projeto e, dentro dela, um arquivo secrets.toml. Adicione as credenciais de conexão do seu Google Sheets:
+
+Ini, TOML
+[connections.gsheets]
+spreadsheet = "SUA_URL_DA_PLANILHA_DO_GOOGLE_SHEETS"
+
+4. Rodar a Aplicação
+Bash
+streamlit run app.py
+🧑‍💻 Desenvolvedor
+Jonas Costa - Desenvolvimento Geral & Arquitetura de Software
+
+💡 Dicas antes de postar no GitHub:
+Ajuste os links: No comando git clone, mude SEU_USUARIO para o seu nome de usuário real do GitHub.
+
+Badges: As primeiras linhas contêm "badges" (aqueles botões coloridos de versão, Python, etc.). Eles vão renderizar perfeitamente no GitHub, dando uma estética excelente ao projeto.
+
+Segurança: Reforcei no arquivo de texto que a configuração de banco de dados deve ser feita via secrets.toml, o que mostra para quem estiver avaliando que você seguiu boas práticas de segurança da informação!
