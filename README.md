@@ -1,4 +1,3 @@
-Markdown
 # 🚘 SGM Automotiva - Sistema de Gestão Mecânica
 
 ![Versão](https://img.shields.io/badge/vers%C3%A3o-9.2--Stable-blue)
@@ -41,7 +40,8 @@ cd SGM-Automotiva
 
 ---
 
-2. Instalar as Dependências
+## 2. Instalar as Dependências
+```bash
 Certifique-se de ter o Python instalado e execute o comando abaixo no seu terminal:
 
 Bash
@@ -50,16 +50,20 @@ pip install streamlit pandas streamlit-gsheets
 ---
 
 3. Configurar as Chaves de Acesso (Secrets)
+```bash
 Crie uma pasta chamada .streamlit na raiz do projeto e, dentro dela, um arquivo chamado secrets.toml. Adicione as credenciais de conexão da sua planilha:
 
 Ini, TOML
 [connections.gsheets]
-spreadsheet = "SUA_URL_DA_PLANILHA_DO_GOOGLE_SHEETS"
+spreadsheet = "(https://docs.google.com/spreadsheets/d/1_7LAFghPztbQ4X3ibr8nYJbxp7LPm-VPsFtmXKzdF4U/edit?gid=0#gid=0)"
 
 ---
 
 4. Rodar a Aplicação
-Bash
+```bash
 streamlit run app.py
+
+---
+
 🧑‍💻 Desenvolvedor
 Jonas Costa - Desenvolvimento Geral & Arquitetura de Software
