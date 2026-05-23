@@ -37,7 +37,7 @@ O **SGM Automotiva** é uma aplicação web desenvolvida para otimizar, centrali
 ```bash
 git clone [https://github.com/ojcosta/SGM-Automotiva.git](https://github.com/ojcosta/SGM-Automotiva.git)
 cd SGM-Automotiva
-```bash
+```
 
 ---
 
@@ -52,12 +52,13 @@ pip install streamlit pandas streamlit-gsheets
 ---
 
 ### 3. Configurar as Chaves de Acesso (Secrets)
-```bash
+```
 Crie uma pasta chamada .streamlit na raiz do projeto e, dentro dela, um arquivo chamado secrets.toml. Adicione as credenciais de conexão da sua planilha:
 
 Ini, TOML
 [connections.gsheets]
 spreadsheet = "(https://docs.google.com/spreadsheets/d/1_7LAFghPztbQ4X3ibr8nYJbxp7LPm-VPsFtmXKzdF4U/edit?gid=0#gid=0)"
+```
 
 ---
 
