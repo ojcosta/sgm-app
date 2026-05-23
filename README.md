@@ -42,9 +42,8 @@ cd SGM-Automotiva
 ---
 
 #### 2. Instalar as Dependências
-```bash
-Certifique-se de ter o Python instalado e execute o comando abaixo no seu terminal:
 
+Certifique-se de ter o Python instalado e execute o comando abaixo no seu terminal:
 
 ```
 pip install streamlit pandas streamlit-gsheets
@@ -52,11 +51,12 @@ pip install streamlit pandas streamlit-gsheets
 ---
 
 ### 3. Configurar as Chaves de Acesso (Secrets)
-```
+
 Crie uma pasta chamada .streamlit na raiz do projeto e, dentro dela, um arquivo chamado secrets.toml. Adicione as credenciais de conexão da sua planilha:
 
 Ini, TOML
 [connections.gsheets]
+```
 spreadsheet = "(https://docs.google.com/spreadsheets/d/1_7LAFghPztbQ4X3ibr8nYJbxp7LPm-VPsFtmXKzdF4U/edit?gid=0#gid=0)"
 ```
 
@@ -65,6 +65,7 @@ spreadsheet = "(https://docs.google.com/spreadsheets/d/1_7LAFghPztbQ4X3ibr8nYJbx
 ### 4. Rodar a Aplicação
 ```bash
 streamlit run app.py
+```
 
 ---
 
