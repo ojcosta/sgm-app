@@ -50,6 +50,7 @@ pip install streamlit pandas streamlit-gsheets
 ---
 
 ### 3. Configurar as Chaves de Acesso (Secrets)
+```bash
 Crie uma pasta chamada .streamlit na raiz do projeto e, dentro dela, um arquivo secrets.toml. Adicione as credenciais de conexão do seu Google Sheets:
 
 Ini, TOML
@@ -59,6 +60,7 @@ spreadsheet = "SUA_URL_DA_PLANILHA_DO_GOOGLE_SHEETS"
 ---
 
 ### 4. Rodar a Aplicação
+```bash
 Bash
 streamlit run app.py
 
