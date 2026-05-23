@@ -245,7 +245,7 @@ if autenticacao():
         st.subheader("📱 SOBRE O SGM AUTOMOTIVA")
         st.markdown(f"""
         **DESENVOLVEDOR:** JONAS COSTA  
-        **VERSÃO:** 0.9.1 (Beta Edition)
+        **VERSÃO:** 0.9.2 (Beta Edition)
 
         Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas.
 
@@ -253,4 +253,4 @@ if autenticacao():
         """)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("SGM Automotiva v0.9.1 - BETA EDITION 🚀")
+    st.sidebar.caption("SGM Automotiva v0.9.2 - BETA EDITION 🚀")
