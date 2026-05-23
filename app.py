@@ -13,17 +13,22 @@ def carregar_dados():
     conn.reset()
     try:
         dados = conn.read(ttl=0)
-        colunas_necessarias = ['OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO', 'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'DIAGNÓSTICO']
+        # ATUALIZADO: 'STATUS' adicionado ao fim da lista de colunas necessárias
+        colunas_necessarias = ['OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO', 'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'DIAGNÓSTICO', 'STATUS']
         
         if dados is None or dados.empty:
             return pd.DataFrame(columns=colunas_necessarias)
         
         for col in colunas_necessarias:
             if col not in dados.columns:
-                dados[col] = None
+                # Se for a nova coluna STATUS, preenche as linhas antigas com 'FINALIZADO' por padrão
+                if col == 'STATUS':
+                    dados[col] = "FINALIZADO"
+                else:
+                    dados[col] = None
         return dados
     except:
-        return pd.DataFrame(columns=['OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO', 'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'DIAGNÓSTICO'])
+        return pd.DataFrame(columns=['OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO', 'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'DIAGNÓSTICO', 'STATUS'])
 
 # --- LISTAS DE OPÇÕES ---
 LISTA_SERVICOS = [
@@ -34,6 +39,9 @@ LISTA_MECANICOS = ["JONAS COSTA", "REBECA ALVES", "WILSON ALVES"]
 LISTA_MARCA = [
     "AUDI", "BMW", "BYD", "CHEVROLET", "CITROËN", "FIAT", "FORD", "HONDA", "HYUNDAI", "INFINITI", "JAGUAR", "JEEP", "LEXUS", "MAZDA", "MERCEDES-BENZ", "MITSUBISHI", "NISSAN", "RENAULT", "TOYOTA", "VOLKSWAGEN", "OUTRO"
 ]
+
+# ADICIONADO: Lista padrão de Status para o sistema
+LISTA_STATUS = ["NA OFICINA", "EM ORÇAMENTO", "FINALIZADO"]
 
 # --- SISTEMA DE LOGIN ---
 def autenticacao():
@@ -65,7 +73,7 @@ def autenticacao():
             
             c1, c2, c3 = st.columns(3)
             c1.metric("STATUS", "Online")
-            c2.metric("VERSÃO", "0.9.2b")
+            c2.metric("VERSÃO", "0.9.3b")  # Versão atualizada
             c3.metric("SUPORTE", "Ativo")
             
         return False
@@ -92,7 +100,6 @@ if autenticacao():
         # --- LÓGICA DE CONTAGEM REFORÇADA ---
         try:
             if not df.empty:
-                # Converte para número, remove erros (NaN) e pega o maior
                 ids_numericos = pd.to_numeric(df['OS'], errors='coerce').dropna()
                 if not ids_numericos.empty:
                     ultima_os = ids_numericos.max()
@@ -133,6 +140,8 @@ if autenticacao():
         with c4:
             responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
         
+        # ADICIONADO: Seleção de Status por serviço incluído na O.S.
+        status_item = st.selectbox("STATUS DO SERVIÇO", LISTA_STATUS)
         motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES", key="diag")
 
         if st.button("➕ ADICIONAR MAIS SERVIÇOS"):
@@ -151,7 +160,8 @@ if autenticacao():
                     'CUSTO (R$)': custo_item,
                     'PAGAMENTO (R$)': pagamento_item,
                     'MECÂNICO': responsavel_os,
-                    'DIAGNÓSTICO': motivo_item.strip()
+                    'DIAGNÓSTICO': motivo_item.strip(),
+                    'STATUS': status_item  # ADICIONADO: Campo salvo no dicionário temporário
                 }
                 st.session_state.lista_servicos_temp.append(novo_item)
                 st.toast("Item adicionado com sucesso!")
@@ -163,7 +173,8 @@ if autenticacao():
             st.markdown("---")
             st.markdown("### 📋 RESUMO DA OS")
             df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
-            st.dataframe(df_temp[['SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'DIAGNÓSTICO']], use_container_width=True)
+            # ATUALIZADO: Adicionado 'STATUS' no dataframe de exibição temporária
+            st.dataframe(df_temp[['SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'STATUS', 'DIAGNÓSTICO']], use_container_width=True)
             
             st.write(f"**TOTAL ACUMULADO: R$ {df_temp['CUSTO (R$)'].sum():.2f}**")
 
@@ -202,11 +213,15 @@ if autenticacao():
             with c_data3:
                 filtro_ano = st.multiselect("Ano", options=sorted(df['DATA_DT'].dt.year.dropna().unique().astype(int)))
 
-            c_busca1, c_busca2 = st.columns(2)
+            # ATUALIZADO: Colunas de filtros redimensionadas para abrigar o filtro de Status
+            c_busca1, c_busca2, c_busca3 = st.columns([2, 1, 1])
             with c_busca1:
                 busca_placa_os = st.text_input("BUSCAR POR PLACA OU OS:").upper()
             with c_busca2:
                 filtro_mec = st.selectbox("FILTRAR POR MECÂNICO", ["Todos"] + LISTA_MECANICOS)
+            with c_busca3:
+                # ADICIONADO: Campo de filtro por Status na busca
+                filtro_status = st.selectbox("FILTRAR POR STATUS", ["Todos"] + LISTA_STATUS)
             
             df_filtrado = df.copy()
             if filtro_dia: df_filtrado = df_filtrado[df_filtrado['DATA_DT'].dt.day.isin(filtro_dia)]
@@ -217,6 +232,10 @@ if autenticacao():
                                           (df_filtrado['OS'].astype(str).str.contains(busca_placa_os))]
             if filtro_mec != "Todos":
                 df_filtrado = df_filtrado[df_filtrado['MECÂNICO'] == filtro_mec]
+            
+            # ADICIONADO: Lógica de aplicação do filtro de Status na visualização
+            if filtro_status != "Todos" and 'STATUS' in df_filtrado.columns:
+                df_filtrado = df_filtrado[df_filtrado['STATUS'] == filtro_status]
 
             st.write("---")
             custos_total = pd.to_numeric(df_filtrado['CUSTO (R$)'], errors='coerce').sum()
