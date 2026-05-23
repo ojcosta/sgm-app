@@ -36,19 +36,28 @@ O **SGM Automotiva** é uma aplicação web desenvolvida para otimizar, centrali
 
 ### 1. Clonar o Repositório
 ```bash
-git clone [https://github.com/SEU_USUARIO/SGM-Automotiva.git](https://github.com/SEU_USUARIO/SGM-Automotiva.git)
+git clone [https://github.com/ojcosta/SGM-Automotiva.git](https://github.com/ojcosta/SGM-Automotiva.git)
 cd SGM-Automotiva
+
+---
+
 2. Instalar as Dependências
 Certifique-se de ter o Python instalado e execute o comando abaixo no seu terminal:
 
 Bash
 pip install streamlit pandas streamlit-gsheets
+
+---
+
 3. Configurar as Chaves de Acesso (Secrets)
 Crie uma pasta chamada .streamlit na raiz do projeto e, dentro dela, um arquivo chamado secrets.toml. Adicione as credenciais de conexão da sua planilha:
 
 Ini, TOML
 [connections.gsheets]
 spreadsheet = "SUA_URL_DA_PLANILHA_DO_GOOGLE_SHEETS"
+
+---
+
 4. Rodar a Aplicação
 Bash
 streamlit run app.py
