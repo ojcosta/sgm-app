@@ -5,7 +5,7 @@
 ![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red)
 ![Google Sheets](https://img.shields.io/badge/Banco%20de%20Dados-Google%20Sheets-yellow)
 
-O **SGM Automotiva** é uma aplicação web desenvolvida para otimizar, centralizar e simplificar o fluxo de trabalho de oficinas mecânicas e garagens. O sistema une a agilidade de uma interface moderna em Python com a praticidade de um banco de dados em nuvem utilizando o Google Sheets.
+O **SGM Automotiva** é uma aplicação web desenvolvida para otimizar, centralizar e simplificar o fluxo de trabalho de uma oficina mecânica e garagen. O sistema une a agilidade de uma interface moderna em Python com a praticidade de um banco de dados em nuvem utilizando o Google Sheets.
 
 ---
 
@@ -68,5 +68,5 @@ streamlit run app.py
 
 ---
 
-🧑‍💻 Desenvolvedor
-Jonas Costa - Desenvolvimento Geral & Arquitetura de Software
+🧑‍💻 Developed
+         by Jonas Costa | General Development & Software Architecture
