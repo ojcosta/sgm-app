@@ -303,14 +303,14 @@ if autenticacao():
         with col_diag1:
             diagnostico_item = st.text_area(
                 "🩺 DIAGNÓSTICO DO MECÂNICO",
-                placeholder="Descreva o que foi encontrado no veículo. Ex: mangueira do radiador furada, pastilha de freio dianteira gasta...",
+                placeholder="DESCREVA O DEFEITO ENCONTRADO NO VEÍCULO.",
                 key="diag",
                 help="O que o mecânico identificou como causa do problema."
             )
         with col_diag2:
             servico_executado_item = st.text_area(
                 "🔧 SERVIÇO EXECUTADO",
-                placeholder="Descreva o que foi feito para resolver. Ex: troca da mangueira do radiador, substituição das pastilhas dianteiras...",
+                placeholder="SERVIÇO EXECUTADO PELO MECÂNICO",
                 key="exec",
                 help="O que foi feito para solucionar o problema."
             )
