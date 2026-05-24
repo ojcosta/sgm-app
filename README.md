@@ -1,74 +1,133 @@
-# 🚘 SGM Automotiva - Sistema de Gestão Mecânica
+# 🚘 SGMA — Automotive Workshop Management System
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-9.2--Stable-blue)
-![Python](https://img.shields.io/badge/Python-3.10%2B-green)
-![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red)
-![Google Sheets](https://img.shields.io/badge/Banco%20de%20Dados-Google%20Sheets-yellow)
+> A real-time automotive workshop management solution built with Python, Streamlit and Google Sheets.
 
-O **SGM Automotiva** é uma aplicação web desenvolvida para otimizar, centralizar e simplificar o fluxo de trabalho de uma oficina mecânica e garagen. O sistema une a agilidade de uma interface moderna em Python com a praticidade de um banco de dados em nuvem utilizando o Google Sheets.
-
----
-
-## 🚀 Funcionalidades Principais
-
-* **🔐 Portal de Acesso Restrito:** Sistema de autenticação integrado para operadores e mecânicos da oficina, garantindo a segurança dos dados.
-* **📝 Registro Digital de OS:** Cadastro automatizado de Ordens de Serviço com cálculo dinâmico do próximo número de OS, validação de campos obrigatórios e feedback de salvamento em tempo real.
-* **🔍 Inteligência de Negócio (BI):** Painel financeiro completo na aba de histórico que calcula automaticamente:
-    * Faturamento Total da oficina.
-    * Ticket Médio por atendimento.
-    * Serviço mais frequente (Moda estatística).
-* **📊 Filtros Avançados:** Busca rápida por Placa ou número de OS, além de filtragem segmentada por mecânico responsável.
-* **🎨 Interface Customizada:** Visual limpo com tabela de dados formatada (moeda em R$ e datas em padrão PT-BR) e inclusão da identidade visual da oficina.
+![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.x-red?style=flat-square&logo=streamlit)
+![Google Sheets](https://img.shields.io/badge/Google%20Sheets-Live%20Sync-green?style=flat-square&logo=googlesheets)
+![Version](https://img.shields.io/badge/Version-1.0.0--beta-orange?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 📋 About
 
-* **Linguagem:** Python
-* **Interface Web:** [Streamlit](https://streamlit.io/)
-* **Manipulação de Dados:** [Pandas](https://pandas.pydata.org/)
-* **Banco de Dados:** [Google Sheets API](https://developers.google.com/sheets/api) (via `streamlit-gsheets`)
+**SGMA (Sistema de Gestão Mecânica Automotiva)** is a lightweight, cloud-based workshop management system designed to streamline the daily operations of automotive repair shops.
+
+Built entirely in Python using Streamlit, the app provides a fast and intuitive interface to register service orders, track vehicle history, manage mechanics, and monitor financial performance — all backed by Google Sheets as a real-time database.
+
+No complex infrastructure needed. Just open the browser and start working.
 
 ---
 
-## 📦 Como Executar o Projeto Localmente
+## ✨ Features
 
-### 1. Clonar o Repositório
+- 📝 **Service Order (OS) Registration** — Multi-service orders with vehicle data, assigned mechanic, diagnosis, cost and payment tracking
+- 🔍 **History & Search** — Filter records by date range, mechanic, status, plate or OS number
+- 💰 **Financial Dashboard** — Real-time metrics for revenue, repair costs and net balance
+- 🔄 **Live Google Sheets Sync** — All data is read and written directly to Google Sheets with zero cache delay
+- 🔐 **Role-based Authentication** — Admin and mechanic profiles with scoped access
+- 📊 **Status Tracking** — Track each service order as *In Shop*, *In Budget* or *Finished*
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend & App | [Streamlit](https://streamlit.io) |
+| Language | Python 3.10+ |
+| Database | Google Sheets via `streamlit-gsheets` |
+| Auth | Role-based login via `st.secrets` |
+| Hosting | [Streamlit Community Cloud](https://share.streamlit.io) |
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
 ```bash
-git clone [https://github.com/ojcosta/SGM-Automotiva.git](https://github.com/ojcosta/SGM-Automotiva.git)
-cd SGM-Automotiva
+git clone https://github.com/your-username/sgm-app.git
+cd sgm-app
 ```
 
----
-
-### 2. Instalar as Dependências
-
-Certifique-se de ter o Python instalado e execute o comando abaixo no seu terminal:
-
-```
-pip install streamlit pandas streamlit-gsheets
+### 2. Install dependencies
+```bash
+pip install -r requirements.txt
 ```
 
----
+### 3. Configure secrets
 
-### 3. Configurar as Chaves de Acesso (Secrets)
+Create the file `.streamlit/secrets.toml`:
 
-Crie uma pasta chamada .streamlit na raiz do projeto e, dentro dela, um arquivo chamado secrets.toml. Adicione as credenciais de conexão da sua planilha:
+```toml
+[usuarios]
+youruser = "yourpassword"
 
-Ini, TOML
 [connections.gsheets]
-```
-spreadsheet = "(https://docs.google.com/spreadsheets/d/1_7LAFghPztbQ4X3ibr8nYJbxp7LPm-VPsFtmXKzdF4U/edit?gid=0#gid=0)"
+spreadsheet   = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID"
+type          = "service_account"
+project_id    = "your-project-id"
+private_key_id = "..."
+private_key   = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+client_email  = "your-service-account@project.iam.gserviceaccount.com"
+client_id     = "..."
 ```
 
----
+> ⚠️ Never commit `secrets.toml` to version control. It is already listed in `.gitignore`.
 
-### 4. Rodar a Aplicação
+### 4. Run the app
 ```bash
 streamlit run app.py
 ```
 
 ---
 
-🧑‍💻 Developed
-         by Jonas Costa | General Development & Software Architecture
+## 📁 Project Structure
+
+```
+sgm-app/
+├── .streamlit/
+│   └── secrets.toml      # Local secrets (not versioned)
+├── app.py                # Main application
+├── requirements.txt      # Python dependencies
+└── README.md
+```
+
+---
+
+## 🔐 User Roles
+
+| Role | Access |
+|---|---|
+| **Admin** | Full access: all OS records, financial dashboard, all mechanics |
+| **Mechanic** | Restricted: only their own service orders, no financial data |
+
+---
+
+## 📸 Screenshots
+
+> *Coming soon*
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] PDF export for service orders
+- [ ] WhatsApp notification on OS completion
+- [ ] Customer portal (view own OS history)
+- [ ] Monthly financial charts
+- [ ] Mobile-optimized layout
+
+---
+
+## 👨‍💻 Developer
+
+Made with ❤️ by **Jonas Costa**
+
+---
+
+## 📄 License
+
+This project is intended for private/commercial use within the workshop environment.  
+For licensing inquiries, please contact the developer.
