@@ -47,7 +47,7 @@ No complex infrastructure needed. Just open the browser and start working.
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/sgm-app.git
+git clone https://github.com/ojcosta/sgm-app.git
 cd sgm-app
 ```
 
