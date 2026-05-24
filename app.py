@@ -7,7 +7,7 @@ from streamlit_gsheets import GSheetsConnection
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.0.0"
+APP_VERSAO = "1.0.1"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
@@ -43,14 +43,100 @@ def carregar_dados() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # LISTAS DE OPÇÕES
 # ---------------------------------------------------------------------------
-LISTA_SERVICOS = [
-    "ALINHAMENTO E BALANCEAMENTO", "ARREFECIMENTO", "AR-CONDICIONADO",
-    "BORRACHARIA", "CAIXA DE MARCHAS", "DIREÇÃO", "FREIOS",
-    "LANTERNAGEM E CAPOTARIA", "MOTOR", "REVISÃO GERAL", "RODAS",
-    "SISTEMA ELÉTRICO", "SISTEMA DE COMBUSTÍVEL", "SISTEMA DE ESCAPAMENTO",
-    "SUSPENSÃO E AMORTECEDORES", "TRANSMISSÃO",
-    "OUTROS DEFEITOS (ESPECIFICAR NO DIAGNÓSTICO)"
-]
+
+# Dicionário: categoria → defeitos específicos
+DEFEITOS_POR_SERVICO = {
+    "ALINHAMENTO E BALANCEAMENTO": [
+        "VIBRAÇÃO NO VOLANTE", "CARRO PUXANDO PARA UM LADO",
+        "DESGASTE IRREGULAR DE PNEUS", "RUÍDO NAS RODAS AO ACELERAR",
+        "VOLANTE TORTO", "OUTROS"
+    ],
+    "ARREFECIMENTO": [
+        "SUPERAQUECIMENTO DO MOTOR", "VAZAMENTO DE FLUIDO DE ARREFECIMENTO",
+        "RADIADOR ENTUPIDO OU DANIFICADO", "VENTOINHA NÃO FUNCIONA",
+        "RESERVATÓRIO DE EXPANSÃO RACHADO", "MANGUEIRAS COM VAZAMENTO", "OUTROS"
+    ],
+    "AR-CONDICIONADO": [
+        "AR NÃO GELA", "VAZAMENTO DE GÁS REFRIGERANTE",
+        "CORREIA DO COMPRESSOR ARREBENTADA", "COMPRESSOR COM BARULHO",
+        "FILTRO DE CABINE SUJO", "CHEIRO RUIM NO AR-CONDICIONADO",
+        "EVAPORADOR COM VAZAMENTO", "CONDENSADOR DANIFICADO", "OUTROS"
+    ],
+    "BORRACHARIA": [
+        "FURO NO PNEU", "PNEU CARECA / DESGASTADO",
+        "VÁLVULA COM VAZAMENTO", "TROCA DE PNEU", "OUTROS"
+    ],
+    "CAIXA DE MARCHAS": [
+        "DIFICULDADE PARA ENGATAR MARCHA", "MARCHA SAINDO SOZINHA",
+        "BARULHO AO TROCAR DE MARCHA", "VAZAMENTO DE ÓLEO DA CAIXA",
+        "EMBREAGEM PATINANDO", "PEDAL DE EMBREAGEM DURO", "OUTROS"
+    ],
+    "DIREÇÃO": [
+        "DIREÇÃO TRAVADA", "BARULHO NA DIREÇÃO",
+        "VAZAMENTO DE ÓLEO HIDRÁULICO", "DIREÇÃO ELÉTRICA COM FALHA",
+        "VOLANTE COM FOLGA EXCESSIVA", "BOMBA DE DIREÇÃO DEFEITUOSA", "OUTROS"
+    ],
+    "FREIOS": [
+        "FREIO COM BARULHO (RANGENDO)", "PEDAL DE FREIO MOLE",
+        "FREIO PULSANDO", "PASTILHA DE FREIO GASTA",
+        "DISCO DE FREIO DESGASTADO", "FLUIDO DE FREIO BAIXO",
+        "FREIO DE MÃO NÃO TRAVA", "CILINDRO MESTRE COM DEFEITO", "OUTROS"
+    ],
+    "LANTERNAGEM E CAPOTARIA": [
+        "AMASSADO NA CARROCERIA", "ARRANHÃO NA PINTURA",
+        "PARA-CHOQUE DANIFICADO", "VIDRO TRINCADO OU QUEBRADO",
+        "RETROVISOR DANIFICADO", "PORTA COM DIFICULDADE DE ABRIR/FECHAR",
+        "BORRACHA DE VEDAÇÃO DANIFICADA", "OUTROS"
+    ],
+    "MOTOR": [
+        "MOTOR FALHANDO", "PERDA DE POTÊNCIA",
+        "CONSUMO EXCESSIVO DE ÓLEO", "VAZAMENTO DE ÓLEO DO MOTOR",
+        "MOTOR NÃO LIGA", "FUMAÇA PRETA / BRANCA / AZUL",
+        "LUZ DO MOTOR ACESA (CHECK ENGINE)", "BARULHO NO MOTOR",
+        "CORREIA DENTADA DESGASTADA", "OUTROS"
+    ],
+    "REVISÃO GERAL": [
+        "REVISÃO PROGRAMADA (KM)", "TROCA DE ÓLEO E FILTRO",
+        "TROCA DE FILTRO DE AR", "TROCA DE VELAS DE IGNIÇÃO",
+        "VERIFICAÇÃO GERAL DO VEÍCULO", "PRÉ-VIAGEM", "OUTROS"
+    ],
+    "RODAS": [
+        "RODA AMASSADA", "PARAFUSO DE RODA COM PROBLEMA",
+        "RODA TRAVADA", "ROLAMENTO DE RODA COM BARULHO", "OUTROS"
+    ],
+    "SISTEMA ELÉTRICO": [
+        "BATERIA DESCARREGANDO", "ALTERNADOR COM DEFEITO",
+        "MOTOR DE ARRANQUE COM PROBLEMA", "FUSÍVEL QUEIMADO",
+        "LUZ / FAROL NÃO FUNCIONA", "SENSOR COM FALHA",
+        "CENTRAL ELETRÔNICA COM ERRO", "FIAÇÃO COM PROBLEMA", "OUTROS"
+    ],
+    "SISTEMA DE COMBUSTÍVEL": [
+        "BOMBA DE COMBUSTÍVEL COM DEFEITO", "FILTRO DE COMBUSTÍVEL ENTUPIDO",
+        "BICO INJETOR COM FALHA", "CARBURADOR COM PROBLEMA",
+        "TANQUE COM VAZAMENTO", "CONSUMO EXCESSIVO DE COMBUSTÍVEL", "OUTROS"
+    ],
+    "SISTEMA DE ESCAPAMENTO": [
+        "ESCAPAMENTO COM BARULHO / FURADO", "CATALISADOR ENTUPIDO",
+        "SONDA LAMBDA COM DEFEITO", "ESCAPAMENTO SOLTANDO FUMAÇA EXCESSIVA",
+        "TUBO DE ESCAPAMENTO COM VAZAMENTO", "OUTROS"
+    ],
+    "SUSPENSÃO E AMORTECEDORES": [
+        "AMORTECEDOR VAZANDO", "MOLA QUEBRADA",
+        "BARULHO NA SUSPENSÃO (ESTALOS)", "CARRO BATENDO NO FUNDO",
+        "BIELETA DE SUSPENSÃO COM FOLGA", "PIVÔ / BANDEJA COM DESGASTE",
+        "BARRA ESTABILIZADORA COM PROBLEMA", "OUTROS"
+    ],
+    "TRANSMISSÃO": [
+        "CÂMBIO AUTOMÁTICO COM FALHA", "TROCA DE ÓLEO DA TRANSMISSÃO",
+        "PATINAÇÃO NA TRANSMISSÃO", "BARULHO NA TRANSMISSÃO",
+        "TRANSMISSÃO NÃO ENGATANDO", "OUTROS"
+    ],
+    "OUTROS DEFEITOS (ESPECIFICAR NO DIAGNÓSTICO)": [
+        "ESPECIFICAR NO CAMPO DE DIAGNÓSTICO"
+    ],
+}
+
+LISTA_SERVICOS = list(DEFEITOS_POR_SERVICO.keys())
 
 LISTA_MECANICOS = ["JONAS COSTA", "REBECA ALVES", "WILSON ALVES"]
 
@@ -69,7 +155,7 @@ LISTA_STATUS = ["NA OFICINA", "EM ORÇAMENTO", "FINALIZADO"]
 # Mecânicos: só veem as próprias OS e não acessam o financeiro completo.
 # ---------------------------------------------------------------------------
 PERFIS = {
-    "admin":    ["jonascosta"],
+    "admin":    ["jonascosta", "pedrobueno", "davifraga", "fabiomoraes", "wagnerandrade", "oficina"],
     "mecanico": ["rebecaalves", "wilsonalves"],
 }
 
@@ -190,7 +276,7 @@ if autenticacao():
 
         c1, c2, c3, c4 = st.columns([4, 3, 2, 2])
         with c1:
-            servico_item   = st.selectbox("SERVIÇO REALIZADO", LISTA_SERVICOS)
+            servico_item   = st.selectbox("GRUPO DO SERVIÇO", LISTA_SERVICOS)
         with c2:
             custo_item     = st.number_input("CUSTO DO REPARO (R$)",   min_value=0.0, step=10.0, format="%.2f")
         with c3:
@@ -198,8 +284,20 @@ if autenticacao():
         with c4:
             responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
 
+        # Segundo dropdown: defeitos filtrados pela categoria selecionada
+        defeitos_disponiveis = DEFEITOS_POR_SERVICO.get(servico_item, ["ESPECIFICAR NO CAMPO DE DIAGNÓSTICO"])
+        defeito_item = st.selectbox("DEFEITO / PROBLEMA IDENTIFICADO", defeitos_disponiveis)
+
         status_item = st.selectbox("STATUS DO SERVIÇO", LISTA_STATUS)
-        motivo_item = st.text_area("DIAGNÓSTICO E OBSERVAÇÕES", key="diag")
+
+        # Pré-preenche o diagnóstico com o defeito selecionado; mecânico pode complementar
+        diagnostico_sugerido = "" if defeito_item == "ESPECIFICAR NO CAMPO DE DIAGNÓSTICO" else defeito_item
+        motivo_item = st.text_area(
+            "DIAGNÓSTICO E OBSERVAÇÕES",
+            value=diagnostico_sugerido,
+            key="diag",
+            help="O defeito selecionado acima é preenchido automaticamente. Adicione detalhes se necessário."
+        )
 
         # --- Botão ADICIONAR ---
         if st.button("➕ ADICIONAR MAIS SERVIÇOS"):
@@ -223,7 +321,7 @@ if autenticacao():
                     'PLACA':            placa_input.strip(),
                     'ANO DE FABRICAÇÃO': ano_input,
                     'CHASSI':           chassi_input.strip(),
-                    'SERVIÇO':          servico_item,
+                    'SERVIÇO':          f"{servico_item} — {defeito_item}" if defeito_item != "ESPECIFICAR NO CAMPO DE DIAGNÓSTICO" else servico_item,
                     'CUSTO (R$)':       custo_item,
                     'PAGAMENTO (R$)':   pagamento_item,
                     'MECÂNICO':         responsavel_os,
