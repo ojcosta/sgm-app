@@ -4,7 +4,7 @@ from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
 # --- CONFIGURAÇÕES INICIAIS ---
-st.set_page_config(page_title="SGM AUTOMOTIVA", layout="wide", page_icon="🚘")
+st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -53,7 +53,7 @@ def autenticacao():
         st.session_state.logado = False
 
     if not st.session_state.logado:
-        st.sidebar.markdown("# 🔐 PORTAL SGMa")
+        st.sidebar.markdown("# 🔐 PORTAL SGMA")
         usuario_input = st.sidebar.text_input("USUÁRIO")
         senha_input = st.sidebar.text_input("SENHA", type="password")
         
@@ -68,7 +68,7 @@ def autenticacao():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("<br><br>", unsafe_allow_html=True)
-            st.markdown("<h1 style='text-align: center;'>🚘 SGM Automotiva</h1>", unsafe_allow_html=True)
+            st.markdown("<h1 style='text-align: center;'>🚘 SGMA</h1>", unsafe_allow_html=True)
             st.info("**UTILIZE SEU USUÁRIO E SENHA PARA LOGAR.**")
             
             c1, c2, c3 = st.columns(3)
