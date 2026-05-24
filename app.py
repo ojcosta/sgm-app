@@ -69,7 +69,7 @@ LISTA_STATUS = ["NA OFICINA", "EM ORÇAMENTO", "FINALIZADO"]
 # Mecânicos: só veem as próprias OS e não acessam o financeiro completo.
 # ---------------------------------------------------------------------------
 PERFIS = {
-    "admin":    ["jonascosta", "pedrobueno", "davifraga", "fabiomoraes", "wagnerandrade", "oficina"],
+    "admin":    ["jonascosta"],
     "mecanico": ["rebecaalves", "wilsonalves"],
 }
 
