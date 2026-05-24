@@ -18,8 +18,9 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 COLUNAS = [
     'OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO',
-    'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO',
-    'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'DIAGNÓSTICO', 'STATUS'
+    'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'DEFEITO',
+    'DIAGNÓSTICO', 'SERVIÇO EXECUTADO',
+    'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'STATUS'
 ]
 
 def carregar_dados() -> pd.DataFrame:
@@ -32,7 +33,14 @@ def carregar_dados() -> pd.DataFrame:
 
         for col in COLUNAS:
             if col not in dados.columns:
-                dados[col] = "FINALIZADO" if col == "STATUS" else None
+                if col == 'STATUS':
+                    dados[col] = "FINALIZADO"
+                elif col == 'DEFEITO':
+                    dados[col] = "NÃO INFORMADO"
+                elif col == 'SERVIÇO EXECUTADO':
+                    dados[col] = "NÃO INFORMADO"
+                else:
+                    dados[col] = None
 
         return dados[COLUNAS]
 
@@ -52,19 +60,18 @@ DEFEITOS_POR_SERVICO = {
         "VOLANTE TORTO", "OUTROS"
     ],
     "ARREFECIMENTO": [
-        "SUPERAQUECIMENTO DO MOTOR", "VAZAMENTO DE FLUÍDO DE ARREFECIMENTO",
+        "SUPERAQUECIMENTO DO MOTOR", "VAZAMENTO DE FLUIDO DE ARREFECIMENTO",
         "RADIADOR ENTUPIDO OU DANIFICADO", "VENTOINHA NÃO FUNCIONA",
         "RESERVATÓRIO DE EXPANSÃO RACHADO", "MANGUEIRAS COM VAZAMENTO", "OUTROS"
     ],
     "AR-CONDICIONADO": [
-        "AR NÃO REFRIGERA", "AR NÃO VENTILA", "VAZAMENTO DE GÁS REFRIGERANTE",
-        "CORREIA DO COMPRESSOR ARREBENTADA", "BARULHO ESTRANHO",
+        "AR NÃO GELA", "VAZAMENTO DE GÁS REFRIGERANTE",
+        "CORREIA DO COMPRESSOR ARREBENTADA", "COMPRESSOR COM BARULHO",
         "FILTRO DE CABINE SUJO", "CHEIRO RUIM NO AR-CONDICIONADO",
         "EVAPORADOR COM VAZAMENTO", "CONDENSADOR DANIFICADO", "OUTROS"
     ],
     "BORRACHARIA": [
-        "PNEU DD FURADO", "PNEU DE FURADO", "PNEU TD FURADO",
-        "PNEU TE FURADO", "PNEU CARECA / DESGASTADO",
+        "FURO NO PNEU", "PNEU CARECA / DESGASTADO",
         "VÁLVULA COM VAZAMENTO", "TROCA DE PNEU", "OUTROS"
     ],
     "CAIXA DE MARCHAS": [
@@ -80,7 +87,7 @@ DEFEITOS_POR_SERVICO = {
     "FREIOS": [
         "FREIO COM BARULHO (RANGENDO)", "PEDAL DE FREIO MOLE",
         "FREIO PULSANDO", "PASTILHA DE FREIO GASTA",
-        "DISCO DE FREIO DESGASTADO", "FLUÍDO DE FREIO BAIXO",
+        "DISCO DE FREIO DESGASTADO", "FLUIDO DE FREIO BAIXO",
         "FREIO DE MÃO NÃO TRAVA", "CILINDRO MESTRE COM DEFEITO", "OUTROS"
     ],
     "LANTERNAGEM E CAPOTARIA": [
@@ -285,27 +292,36 @@ if autenticacao():
         with c4:
             responsavel_os = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS)
 
-        # Segundo dropdown: defeitos filtrados pela categoria selecionada
+        # Defeito filtrado pela categoria
         defeitos_disponiveis = DEFEITOS_POR_SERVICO.get(servico_item, ["ESPECIFICAR NO CAMPO DE DIAGNÓSTICO"])
-        defeito_item = st.selectbox("DEFEITO / PROBLEMA IDENTIFICADO", defeitos_disponiveis)
+        defeito_item = st.selectbox("🔎 DEFEITO / PROBLEMA IDENTIFICADO", defeitos_disponiveis)
 
         status_item = st.selectbox("STATUS DO SERVIÇO", LISTA_STATUS)
 
-        # Pré-preenche o diagnóstico com o defeito selecionado; mecânico pode complementar
-        diagnostico_sugerido = "" if defeito_item == "ESPECIFICAR NO CAMPO DE DIAGNÓSTICO" else defeito_item
-        motivo_item = st.text_area(
-            "DIAGNÓSTICO E OBSERVAÇÕES",
-            value=diagnostico_sugerido,
-            key="diag",
-            help="O defeito selecionado acima é preenchido automaticamente. Adicione detalhes se necessário."
-        )
+        st.markdown("---")
+        col_diag1, col_diag2 = st.columns(2)
+        with col_diag1:
+            diagnostico_item = st.text_area(
+                "🩺 DIAGNÓSTICO DO MECÂNICO",
+                placeholder="Descreva o que foi encontrado no veículo. Ex: mangueira do radiador furada, pastilha de freio dianteira gasta...",
+                key="diag",
+                help="O que o mecânico identificou como causa do problema."
+            )
+        with col_diag2:
+            servico_executado_item = st.text_area(
+                "🔧 SERVIÇO EXECUTADO",
+                placeholder="Descreva o que foi feito para resolver. Ex: troca da mangueira do radiador, substituição das pastilhas dianteiras...",
+                key="exec",
+                help="O que foi feito para solucionar o problema."
+            )
 
         # --- Botão ADICIONAR ---
         if st.button("➕ ADICIONAR MAIS SERVIÇOS"):
             erros = []
-            if not placa_input.strip():   erros.append("Placa")
-            if not modelo_input.strip():  erros.append("Modelo")
-            if not motivo_item.strip():   erros.append("Diagnóstico")
+            if not placa_input.strip():              erros.append("Placa")
+            if not modelo_input.strip():             erros.append("Modelo")
+            if not diagnostico_item.strip():         erros.append("Diagnóstico do Mecânico")
+            if not servico_executado_item.strip():   erros.append("Serviço Executado")
             if custo_item == 0 and pagamento_item == 0:
                 erros.append("Informe ao menos um valor financeiro (Custo ou Pagamento)")
 
@@ -313,21 +329,23 @@ if autenticacao():
                 st.error(f"⚠️ Campos obrigatórios: {', '.join(erros)}.")
             else:
                 st.session_state.lista_servicos_temp.append({
-                    'OS':               proxima_os,
-                    'DATA':             str(data_input),
-                    'MARCA':            marca_input,
-                    'MODELO':           modelo_input.strip(),
-                    'KM ATUAL':         km_input,
-                    'PROPRIETÁRIO':     proprietario_input.strip(),
-                    'PLACA':            placa_input.strip(),
+                    'OS':                proxima_os,
+                    'DATA':              str(data_input),
+                    'MARCA':             marca_input,
+                    'MODELO':            modelo_input.strip(),
+                    'KM ATUAL':          km_input,
+                    'PROPRIETÁRIO':      proprietario_input.strip(),
+                    'PLACA':             placa_input.strip(),
                     'ANO DE FABRICAÇÃO': ano_input,
-                    'CHASSI':           chassi_input.strip(),
-                    'SERVIÇO':          f"{servico_item} — {defeito_item}" if defeito_item != "ESPECIFICAR NO CAMPO DE DIAGNÓSTICO" else servico_item,
-                    'CUSTO (R$)':       custo_item,
-                    'PAGAMENTO (R$)':   pagamento_item,
-                    'MECÂNICO':         responsavel_os,
-                    'DIAGNÓSTICO':      motivo_item.strip(),
-                    'STATUS':           status_item,
+                    'CHASSI':            chassi_input.strip(),
+                    'SERVIÇO':           servico_item,
+                    'DEFEITO':           defeito_item,
+                    'DIAGNÓSTICO':       diagnostico_item.strip(),
+                    'SERVIÇO EXECUTADO': servico_executado_item.strip(),
+                    'CUSTO (R$)':        custo_item,
+                    'PAGAMENTO (R$)':    pagamento_item,
+                    'MECÂNICO':          responsavel_os,
+                    'STATUS':            status_item,
                 })
                 st.toast("✅ Serviço adicionado!")
                 st.rerun()
@@ -338,7 +356,7 @@ if autenticacao():
             st.markdown("### 📋 RESUMO DA OS")
             df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
             st.dataframe(
-                df_temp[['SERVIÇO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'STATUS', 'DIAGNÓSTICO']],
+                df_temp[['SERVIÇO', 'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'STATUS']],
                 use_container_width=True
             )
             st.write(f"**TOTAL ACUMULADO: R$ {df_temp['CUSTO (R$)'].sum():.2f}**")
@@ -453,7 +471,8 @@ if autenticacao():
             st.write("---")
 
             colunas_exibir = COLUNAS if perfil == "admin" else [
-                'OS', 'DATA', 'MARCA', 'MODELO', 'PLACA', 'SERVIÇO', 'STATUS', 'DIAGNÓSTICO'
+                'OS', 'DATA', 'MARCA', 'MODELO', 'PLACA', 'SERVIÇO',
+                'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO', 'STATUS'
             ]
 
             st.dataframe(
