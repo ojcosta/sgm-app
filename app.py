@@ -69,6 +69,7 @@ def autenticacao():
         with col2:
             st.markdown("<br><br>", unsafe_allow_html=True)
             st.markdown("<h1 style='text-align: center;'>🚘 SGMA</h1>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align: center;'>Sistema de Gestão Mecânica Automotiva</h2>", unsafe_allow_html=True)
             st.info("**UTILIZE SEU USUÁRIO E SENHA PARA LOGAR.**")
             
             c1, c2, c3 = st.columns(3)
