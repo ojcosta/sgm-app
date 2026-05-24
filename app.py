@@ -374,7 +374,7 @@ if autenticacao():
     # TELA: SOBRE
     # -----------------------------------------------------------------------
     elif escolha == "SOBRE O APP":
-        st.subheader("📱 SOBRE O SGMA")
+        st.subheader("📱 SOBRE O SGM AUTOMOTIVA")
         st.markdown(f"""
         **DESENVOLVEDOR:** JONAS COSTA  
         **VERSÃO:** {APP_VERSAO}
