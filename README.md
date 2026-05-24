@@ -123,7 +123,7 @@ sgm-app/
 
 ## 👨‍💻 Developer
 
-Made with ❤️ by **Jonas Costa**
+Made with 👨🏽‍💻 by **Jonas Costa**
 
 ---
 
