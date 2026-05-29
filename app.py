@@ -3,11 +3,19 @@ import pandas as pd
 from datetime import datetime, date
 
 from streamlit_gsheets import GSheetsConnection
+import hashlib
+
+# ---------------------------------------------------------------------------
+# UTILITÁRIOS DE SEGURANÇA
+# ---------------------------------------------------------------------------
+def _hash(s: str) -> str:
+    """Retorna o SHA-256 da string. Nunca armazene senhas em texto puro."""
+    return hashlib.sha256(s.encode()).hexdigest()
 
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.0.1"
+APP_VERSAO = "1.0.2"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
@@ -281,7 +289,7 @@ def autenticacao() -> bool:
                 st.sidebar.error("⚠️ Configuração de usuários ausente nos secrets.")
                 return False
 
-            if usuario_input in usuarios and usuarios[usuario_input] == senha_input:
+            if usuario_input in usuarios and usuarios[usuario_input] == _hash(senha_input):
                 st.session_state.logado        = True
                 st.session_state.usuario_nome  = usuario_input
                 st.session_state.usuario_perfil = perfil_do_usuario(usuario_input)
