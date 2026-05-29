@@ -310,7 +310,7 @@ if autenticacao():
         with col_diag2:
             servico_executado_item = st.text_area(
                 "🔧 SERVIÇO EXECUTADO",
-                placeholder="SERVIÇO EXECUTADO PELO MECÂNICO",
+                placeholder="DESCREVA O SERVIÇO EXECUTADO PELO MECÂNICO",
                 key="exec",
                 help="O que foi feito para solucionar o problema."
             )
