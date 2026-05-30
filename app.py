@@ -77,6 +77,7 @@ DEFEITOS_POR_SERVICO = {
         "CHEIRO RUIM NO AR-CONDICIONADO",
         "COMPRESSOR COM BARULHO",
         "CONDENSADOR DANIFICADO",
+        "CONTROLADOR DO AR COM DEFEITO",
         "CORREIA DO COMPRESSOR ARREBENTADA",
         "EVAPORADOR COM VAZAMENTO",
         "FILTRO DE CABINE SUJO",
@@ -141,7 +142,8 @@ DEFEITOS_POR_SERVICO = {
         "DISCO DE FREIO DESGASTADO",
         "FLUIDO DE FREIO BAIXO",
         "FREIO COM BARULHO (RANGENDO)",
-        "FREIO DE MÃO NÃO TRAVA",
+        "FREIO DE MÃO NÃO SEGURA",
+        "FREIO NÃO SEGURA",
         "FREIO PULSANDO",
         "PASTILHA DE FREIO GASTA",
         "PEDAL DE FREIO MOLE",
@@ -151,18 +153,32 @@ DEFEITOS_POR_SERVICO = {
     ],
     "LANTERNAGEM E CAPOTARIA": [
         "AMASSADO NA CARROCERIA",
+        "ARGOLA DE REBOQUE AUSENTE / QUEBRADA",
         "ARRANHÃO NA PINTURA",
-        "BANCO RASGADO / QUEBRADO",
+        "ASSENTO DO BANCO DANIFICADO",
+        "ASSOALHO DANIFICADO",
+        "BANCO DANIFICADO / QUEBRADO",
+        "BORRACHA DA PORTA DANIFICADA",
         "BORRACHA DE VEDAÇÃO DANIFICADA",
-        "PARA-CHOQUE DANIFICADO",
+        "CINTO DE SEGURANÇA COM DEFEITO",
+        "ENCOSTO DO BANCO DANIFICADO",
+        "FRISO AVARIADO",
+        "LENTE DO RETROVISOR QUEBRADO",
+        "PARA-CHOQUE AVARIADO",
         "PARABRISA TRINCADO/QUEBRADO",
+        "PARA-SOL COM DEFEITO",
         "PEGA-MÃO QUEBRADO / AUSENTE",
-        "PORTA COM DIFICULDADE DE ABRIR/FECHAR",
+        "PLACA SOLTA",
+        "PINTURA DE CARROCERIA",
+        "PORTA-LUVA COM DEFEITO",
+        "PORTA DANIFICADA",
+        "PORTA-MALA DANIFICADO",
         "RETROVISOR DANIFICADO",
         "VIDRO TRINCADO OU QUEBRADO",
         "OUTROS",
     ],
     "MOTOR": [
+        "ALAVANCA DE ABERTURA DO CAPOT COM DEFEITO",
         "BARULHO NO MOTOR",
         "CONSUMO EXCESSIVO DE ÓLEO",
         "CORREIA ARREBENTADA",
@@ -172,6 +188,7 @@ DEFEITOS_POR_SERVICO = {
         "MOTOR FALHANDO",
         "MOTOR NÃO LIGA",
         "PERDA DE POTÊNCIA",
+        "TAMPA DO ÓLEO QUEBRADA",
         "VAZAMENTO DE ÓLEO DO MOTOR",
         "OUTROS",
     ],
@@ -190,7 +207,9 @@ DEFEITOS_POR_SERVICO = {
         "CARBURADOR COM PROBLEMA",
         "CONSUMO EXCESSIVO DE COMBUSTÍVEL",
         "FILTRO DE COMBUSTÍVEL ENTUPIDO",
+        "PANE SECA",
         "TANQUE COM VAZAMENTO",
+        "TAMPA DO TANQUE QUEBRADA",
         "OUTROS",
     ],
     "SISTEMA DE ESCAPAMENTO": [
@@ -202,14 +221,26 @@ DEFEITOS_POR_SERVICO = {
         "OUTROS",
     ],
     "SISTEMA ELÉTRICO": [
+        "ALERTA COM DEFEITO",
         "ALTERNADOR COM DEFEITO",
         "BATERIA DESCARREGANDO",
         "CENTRAL ELETRÔNICA COM ERRO",
+        "CHAVE DE IGNIÇÃO COM DEFEITO",
+        "COMANDO DE SETAS",
+        "ELEVADORES DE VIDROS COM DEFEITO",
+        "FARÓIS COM DEFEITO",
         "FIAÇÃO COM PROBLEMA",
         "FUSÍVEL QUEIMADO",
-        "LUZ / FAROL NÃO FUNCIONA",
+        "LIMPADOR DE PARABRISAS COM DEFEITO",
+        "LANTERNAS COM DEFEITO",
+        "LUZES COM DEFEITO",
         "MOTOR DE ARRANQUE COM PROBLEMA",
+        "NÃO VIRA",
+        "PANE ELÉTRICA",
+        "QUADRO DE BORDO COM DEFEITO",
+        "RELES COM DEFEITO"
         "SENSOR COM FALHA",
+        "SISTEMA DE ÁUDIO COM DEFEITO",
         "OUTROS",
     ],
     "SUSPENSÃO E AMORTECEDORES": [
@@ -368,7 +399,7 @@ if autenticacao():
         with col2:
             proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado, key="prop")
             placa_input        = st.text_input("PLACA", disabled=travado, key="placa").upper()
-            ano_input          = st.number_input("ANO DE FABRICAÇÃO", min_value=1900, max_value=datetime.now().year + 1, step=1, format="%d", disabled=travado, key="ano")
+            ano_input          = st.number_input("ANO DE FABRICAÇÃO", min_value=1910, max_value=datetime.now().year + 1, step=1, format="%d", disabled=travado, key="ano")
             chassi_input       = st.text_input("CHASSI", disabled=travado, key="chassi").upper()
 
         st.divider()
@@ -596,7 +627,7 @@ if autenticacao():
         O **SGMA** automatiza o fluxo de trabalho de oficinas mecânicas, centralizando o registro de ordens de serviço, controle financeiro e histórico de atendimentos em um único lugar.
 
         Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Desenvolvido com foco em usabilidade, eficiência e escalabilidade — em constante evolução para melhor atendê-lo.
-        Para sugestões e críticas, acesse: https://wa.me/5521987360343 📞
+        Para sugestões e críticas, **acesse**: https://wa.me/5521987360343 📞
         """)
 
     st.sidebar.markdown("---")
