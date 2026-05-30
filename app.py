@@ -15,7 +15,7 @@ def _hash(s: str) -> str:
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.0.2"
+APP_VERSAO = "1.0.5"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
@@ -55,6 +55,17 @@ def carregar_dados() -> pd.DataFrame:
     except Exception as e:
         st.error(f"⚠️ Erro ao carregar dados do Google Sheets: {e}")
         return pd.DataFrame(columns=COLUNAS)
+
+
+def calcular_proxima_os(dados: pd.DataFrame) -> int:
+    """Calcula o número da próxima OS com base nos dados atuais."""
+    try:
+        if not dados.empty:
+            ids_num = pd.to_numeric(dados['OS'], errors='coerce').dropna()
+            return int(ids_num.max() + 1) if not ids_num.empty else 1
+        return 1
+    except Exception:
+        return len(dados) + 1
 
 # ---------------------------------------------------------------------------
 # LISTAS DE OPÇÕES
@@ -294,26 +305,47 @@ def perfil_do_usuario(usuario: str) -> str:
             return perfil
     return "mecanico"   # padrão mais restritivo
 
-# ---------------------------------------------------------------------------
-# SISTEMA DE LOGIN — senhas lidas de st.secrets (nunca no código-fonte)
-# ---------------------------------------------------------------------------
-# Exemplo de secrets.toml (Streamlit Cloud → Settings → Secrets):
-#
-# [usuarios]
-# jonascosta    = "SuaSenhaAqui"
-# rebecaalves   = "SuaSenhaAqui"
-# ...
+# Mapa username → nome real do mecânico (para filtro correto)
+USUARIO_PARA_MECANICO = {
+    "jonascosta":   "JONAS COSTA",
+    "rebecaalves":  "REBECA ALVES",
+    "wilsonalves":  "WILSON ALVES",
+    "pedrobueno":   "PEDRO BUENO",
+    "davifraga":    "DAVI FRAGA",
+    "fabiomoraes":  "FABIO MORAES",
+    "wagnerandrade":"WAGNER ANDRADE",
+    "oficina":      "OFICINA",
+}
 
 def autenticacao() -> bool:
     if "logado" not in st.session_state:
         st.session_state.logado = False
 
     if not st.session_state.logado:
-        st.sidebar.markdown("# 🔐 PORTAL SGMA")
-        usuario_input = st.sidebar.text_input("USUÁRIO").strip().lower()
-        senha_input   = st.sidebar.text_input("SENHA", type="password")
 
-        if st.sidebar.button("LOGIN", use_container_width=True):
+        # ── Sidebar: painel de login ────────────────────────────────────────
+        st.sidebar.markdown(
+            f"""
+            <div style="display:flex;align-items:center;gap:10px;
+                        padding-bottom:1rem;margin-bottom:1.25rem;
+                        border-bottom:1px solid rgba(128,128,128,0.2);">
+                <div style="width:36px;height:36px;border-radius:8px;
+                            background:rgba(56,132,255,0.15);
+                            display:flex;align-items:center;justify-content:center;
+                            font-size:18px;">🔧</div>
+                <div>
+                    <div style="font-weight:600;font-size:15px;line-height:1.2;">SGMA</div>
+                    <div style="font-size:11px;opacity:0.55;">Área restrita</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        usuario_input = st.sidebar.text_input("Usuário").strip().lower()
+        senha_input   = st.sidebar.text_input("Senha", type="password")
+
+        if st.sidebar.button("Entrar →", use_container_width=True, type="primary"):
             try:
                 usuarios = st.secrets["usuarios"]
             except KeyError:
@@ -321,23 +353,51 @@ def autenticacao() -> bool:
                 return False
 
             if usuario_input in usuarios and usuarios[usuario_input] == _hash(senha_input):
-                st.session_state.logado        = True
-                st.session_state.usuario_nome  = usuario_input
+                st.session_state.logado         = True
+                st.session_state.usuario_nome   = usuario_input
                 st.session_state.usuario_perfil = perfil_do_usuario(usuario_input)
                 st.rerun()
             else:
-                st.sidebar.error("⚠️ USUÁRIO OU SENHA INVÁLIDOS.")
+                st.sidebar.error("Usuário ou senha inválidos.")
 
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            st.markdown("<h1 style='text-align:center;'>🚘 SGMA</h1>",        unsafe_allow_html=True)
-            st.markdown("<h2 style='text-align:center;'>Sistema de Gestão Mecânica Automotiva</h2>", unsafe_allow_html=True)
-            st.info("**UTILIZE SEU USUÁRIO E SENHA PARA ACESSAR.**")
+        st.sidebar.markdown(
+            f"<div style='margin-top:auto;padding-top:2rem;"
+            f"font-size:11px;opacity:0.4;text-align:center;'>"
+            f"SGM Automotiva v{APP_VERSAO} · BETA</div>",
+            unsafe_allow_html=True,
+        )
+
+        # ── Área principal: apresentação ────────────────────────────────────
+        _, col_c, _ = st.columns([1, 2, 1])
+        with col_c:
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            st.markdown(
+                """
+                <div style="text-align:center;margin-bottom:1.5rem;">
+                    <div style="width:72px;height:72px;border-radius:16px;
+                                background:rgba(56,132,255,0.12);
+                                display:flex;align-items:center;justify-content:center;
+                                font-size:36px;margin:0 auto 1rem;">🚘</div>
+                    <h1 style="margin:0 0 6px;font-size:26px;font-weight:600;">
+                        Sistema de Gestão Mecânica
+                    </h1>
+                    <p style="margin:0;font-size:15px;opacity:0.6;">
+                        Ordens de serviço, histórico de veículos e controle financeiro
+                        da sua oficina em um só lugar.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            st.info("Utilize seu usuário e senha na barra lateral para acessar.")
+
             c1, c2, c3 = st.columns(3)
-            c1.metric("STATUS",  "Online")
-            c2.metric("VERSÃO",  APP_VERSAO)
-            c3.metric("SUPORTE", "Ativo")
+            c1.metric("Status",  "✅ Online")
+            c2.metric("Versão",  APP_VERSAO)
+            c3.metric("Suporte", "✅ Ativo")
+
         return False
 
     return True
@@ -376,15 +436,6 @@ if autenticacao():
 
         # Número da próxima OS — estimativa para exibição
         # O número definitivo é recalculado no momento do salvamento
-        def calcular_proxima_os(dados: pd.DataFrame) -> int:
-            try:
-                if not dados.empty:
-                    ids_num = pd.to_numeric(dados['OS'], errors='coerce').dropna()
-                    return int(ids_num.max() + 1) if not ids_num.empty else 1
-                return 1
-            except Exception:
-                return len(dados) + 1
-
         proxima_os = calcular_proxima_os(df)
         st.info(f"📌 ORDEM DE SERVIÇO ESTIMADA: **{proxima_os}** *(confirmada ao salvar)*")
 
@@ -541,7 +592,7 @@ if autenticacao():
         else:
             # Mecânicos só veem as próprias OS
             if perfil == "mecanico":
-                mecanico_nome = nome.replace(".", " ").upper()
+                mecanico_nome = USUARIO_PARA_MECANICO.get(nome, nome.upper())
                 df = df[df['MECÂNICO'].str.upper() == mecanico_nome]
 
             df['DATA_DT'] = pd.to_datetime(df['DATA'], errors='coerce')
@@ -604,6 +655,7 @@ if autenticacao():
 
             st.dataframe(
                 df_f[[c for c in colunas_exibir if c in df_f.columns]]
+                  .assign(OS=lambda x: pd.to_numeric(x['OS'], errors='coerce'))
                   .sort_values(by='OS', ascending=False),
                 use_container_width=True,
                 column_config={
@@ -619,15 +671,16 @@ if autenticacao():
     # TELA: SOBRE
     # -----------------------------------------------------------------------
     elif escolha == "SOBRE O APP":
-        st.subheader("📱 SOBRE O SGM AUTOMOTIVA")
+        st.subheader("📱 Sobre o SGMA")
         st.markdown(f"""
-        **DESENVOLVEDOR:** JONAS COSTA  
-        **VERSÃO:** {APP_VERSAO}
+        **Desenvolvedor:** Jonas Costa  
+        **Versão:** {APP_VERSAO}
 
-        O **SGMA** automatiza o fluxo de trabalho de oficinas mecânicas, centralizando o registro de ordens de serviço, controle financeiro e histórico de atendimentos em um único lugar.
+        O **SGMA** centraliza o registro de ordens de serviço, controle financeiro e histórico de atendimentos da sua oficina em um único lugar.
 
-        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Desenvolvido com foco em usabilidade, eficiência e escalabilidade — em constante evolução para melhor atendê-lo.
-        Para sugestões e críticas, **acesse**: https://wa.me/5521987360343 📞
+        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir dados sempre acessíveis, seguros e fáceis de analisar. Desenvolvido com foco em usabilidade, eficiência e escalabilidade — em constante evolução.
+
+        Sugestões e críticas: [WhatsApp](https://wa.me/5521987360343) 📞
         """)
 
     st.sidebar.markdown("---")
