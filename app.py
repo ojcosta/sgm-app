@@ -321,7 +321,9 @@ if autenticacao():
 
     st.sidebar.write(f"Logado como: **{nome}**  \n`Perfil: {perfil}`")
     if st.sidebar.button("Logout"):
-        st.session_state.logado = False
+        for chave in ["logado", "usuario_nome", "usuario_perfil",
+                      "lista_servicos_temp", "confirmar_salvar"]:
+            st.session_state.pop(chave, None)
         st.rerun()
 
     # Menu adaptado ao perfil
