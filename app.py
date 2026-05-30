@@ -596,6 +596,7 @@ if autenticacao():
         O **SGMA** automatiza o fluxo de trabalho de oficinas mecânicas, centralizando o registro de ordens de serviço, controle financeiro e histórico de atendimentos em um único lugar.
 
         Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Desenvolvido com foco em usabilidade, eficiência e escalabilidade — em constante evolução para melhor atendê-lo.
+        Para sugestões e críticas, acesse: https://wa.me/5521987360343 📞
         """)
 
     st.sidebar.markdown("---")
