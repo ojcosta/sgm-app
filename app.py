@@ -395,7 +395,7 @@ def autenticacao() -> bool:
 
             c1, c2, c3 = st.columns(3)
             c1.metric("Status",  "✅ Online")
-            c2.metric("Versão",  ⚙️ APP_VERSAO)
+            c2.metric("Versão",  APP_VERSAO)
             c3.metric("Suporte", "✅ Ativo")
 
         return False
