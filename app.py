@@ -380,7 +380,7 @@ def autenticacao() -> bool:
                                 display:flex;align-items:center;justify-content:center;
                                 font-size:36px;margin:0 auto 1rem;">🚘</div>
                     <h1 style="margin:0 0 6px;font-size:26px;font-weight:600;">
-                        Sistema de Gestão Mecânica
+                        Sistema de Gestão Mecânica Automotiva
                     </h1>
                     <p style="margin:0;font-size:15px;opacity:0.6;">
                         Ordens de serviço, histórico de veículos e controle financeiro
@@ -395,7 +395,7 @@ def autenticacao() -> bool:
 
             c1, c2, c3 = st.columns(3)
             c1.metric("Status",  "✅ Online")
-            c2.metric("Versão",  APP_VERSAO)
+            c2.metric("Versão",  ⚙️ APP_VERSAO)
             c3.metric("Suporte", "✅ Ativo")
 
         return False
