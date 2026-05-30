@@ -204,7 +204,7 @@ DEFEITOS_POR_SERVICO = {
     "SISTEMA DE COMBUSTÍVEL": [
         "BICO INJETOR COM FALHA",
         "BOMBA DE COMBUSTÍVEL COM DEFEITO",
-        "CARBURADOR COM PROBLEMA",
+        "CARBURADOR COM DEFEITO",
         "CONSUMO EXCESSIVO DE COMBUSTÍVEL",
         "FILTRO DE COMBUSTÍVEL ENTUPIDO",
         "PANE SECA",
@@ -229,12 +229,12 @@ DEFEITOS_POR_SERVICO = {
         "COMANDO DE SETAS",
         "ELEVADORES DE VIDROS COM DEFEITO",
         "FARÓIS COM DEFEITO",
-        "FIAÇÃO COM PROBLEMA",
+        "FIAÇÃO COM DEFEITO",
         "FUSÍVEL QUEIMADO",
         "LIMPADOR DE PARABRISAS COM DEFEITO",
         "LANTERNAS COM DEFEITO",
         "LUZES COM DEFEITO",
-        "MOTOR DE ARRANQUE COM PROBLEMA",
+        "MOTOR DE ARRANQUE COM DEFEITO",
         "NÃO VIRA",
         "PANE ELÉTRICA",
         "QUADRO DE BORDO COM DEFEITO",
@@ -245,7 +245,7 @@ DEFEITOS_POR_SERVICO = {
     ],
     "SUSPENSÃO E AMORTECEDORES": [
         "AMORTECEDOR VAZANDO",
-        "BARRA ESTABILIZADORA COM PROBLEMA",
+        "BARRA ESTABILIZADORA COM DEFEITO",
         "BIELETA DE SUSPENSÃO COM FOLGA",
         "BARULHO NA SUSPENSÃO (ESTALOS)",
         "CARRO BATENDO NO FUNDO",
@@ -417,7 +417,7 @@ if autenticacao():
 
         # Defeito filtrado pela categoria
         defeitos_disponiveis = DEFEITOS_POR_SERVICO.get(servico_item, ["ESPECIFICAR NO CAMPO DE DIAGNÓSTICO"])
-        defeito_item = st.selectbox("🔎 DEFEITO / PROBLEMA IDENTIFICADO", defeitos_disponiveis)
+        defeito_item = st.selectbox("🔎 DEFEITO IDENTIFICADO", defeitos_disponiveis)
 
         status_item = st.selectbox("STATUS DO SERVIÇO", LISTA_STATUS)
 
@@ -428,14 +428,14 @@ if autenticacao():
                 "🩺 DIAGNÓSTICO DO MECÂNICO",
                 placeholder="DESCREVA O DEFEITO ENCONTRADO NO VEÍCULO.",
                 key="diag",
-                help="O que o mecânico identificou como causa do problema."
+                help="O que o mecânico identificou como causa do defeito."
             )
         with col_diag2:
             servico_executado_item = st.text_area(
                 "🔧 SERVIÇO EXECUTADO",
                 placeholder="DESCREVA O SERVIÇO EXECUTADO PELO MECÂNICO",
                 key="exec",
-                help="O que foi feito para solucionar o problema."
+                help="O que foi feito para solucionar o defeito."
             )
 
         # --- Botão ADICIONAR ---
