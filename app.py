@@ -321,9 +321,7 @@ if autenticacao():
 
     st.sidebar.write(f"Logado como: **{nome}**  \n`Perfil: {perfil}`")
     if st.sidebar.button("Logout"):
-        for chave in ["logado", "usuario_nome", "usuario_perfil",
-                      "lista_servicos_temp", "confirmar_salvar"]:
-            st.session_state.pop(chave, None)
+        st.session_state.logado = False
         st.rerun()
 
     # Menu adaptado ao perfil
@@ -345,17 +343,19 @@ if autenticacao():
         if "lista_servicos_temp" not in st.session_state:
             st.session_state.lista_servicos_temp = []
 
-        # Número da próxima OS
-        try:
-            if not df.empty:
-                ids_num = pd.to_numeric(df['OS'], errors='coerce').dropna()
-                proxima_os = int(ids_num.max() + 1) if not ids_num.empty else 1
-            else:
-                proxima_os = 1
-        except Exception:
-            proxima_os = len(df) + 1
+        # Número da próxima OS — estimativa para exibição
+        # O número definitivo é recalculado no momento do salvamento
+        def calcular_proxima_os(dados: pd.DataFrame) -> int:
+            try:
+                if not dados.empty:
+                    ids_num = pd.to_numeric(dados['OS'], errors='coerce').dropna()
+                    return int(ids_num.max() + 1) if not ids_num.empty else 1
+                return 1
+            except Exception:
+                return len(dados) + 1
 
-        st.info(f"📌 ORDEM DE SERVIÇO ATUAL: **{proxima_os}**")
+        proxima_os = calcular_proxima_os(df)
+        st.info(f"📌 ORDEM DE SERVIÇO ESTIMADA: **{proxima_os}** *(confirmada ao salvar)*")
 
         travado = len(st.session_state.lista_servicos_temp) > 0
 
@@ -467,7 +467,11 @@ if autenticacao():
                         if st.button("✅ SIM, SALVAR", use_container_width=True):
                             with st.status("📦 ENVIANDO PARA GOOGLE SHEETS...", expanded=True) as status:
                                 try:
+                                    # Relê o Sheets agora para pegar o número de OS correto
                                     df_nuvem = carregar_dados()
+                                    os_definitiva = calcular_proxima_os(df_nuvem)
+                                    df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
+                                    df_temp['OS'] = os_definitiva
                                     df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
                                     conn.update(
                                         spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"],
@@ -589,11 +593,9 @@ if autenticacao():
         **DESENVOLVEDOR:** JONAS COSTA  
         **VERSÃO:** {APP_VERSAO}
 
-        O **SGMA** automatiza o fluxo de trabalho de oficinas mecânicas.
+        O **SGMA** automatiza o fluxo de trabalho de oficinas mecânicas, centralizando o registro de ordens de serviço, controle financeiro e histórico de atendimentos em um único lugar.
 
-       Este projeto foi concebido para automatizar o fluxo de trabalho de oficinas mecânicas.
-
-        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Foi desenvolvido com foco em usabilidade, eficiência e escalabilidade, permitindo que oficinas de todos os tamanhos possam gerenciar suas operações de forma mais inteligente e eficaz. O App é instável e necessita constatemente de atualizações, correções e melhorias. Agradecemos a compreensão e o feedback de todos os usuários para tornar o SGM Automotiva cada vez melhor!
+        Utiliza **Python**, **Streamlit** e integração em tempo real com **Google Sheets** para garantir que os dados estejam sempre acessíveis, seguros e fáceis de analisar. Desenvolvido com foco em usabilidade, eficiência e escalabilidade — em constante evolução para melhor atendê-lo.
         """)
 
     st.sidebar.markdown("---")
