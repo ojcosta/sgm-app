@@ -35,7 +35,7 @@ COLUNAS = [
     'OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO',
     'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'DEFEITO',
     'DIAGNÓSTICO', 'SERVIÇO EXECUTADO',
-    'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'STATUS',
+    'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO',
     'EDITADO_POR', 'DATA_EDICAO'
 ]
 
@@ -49,8 +49,6 @@ def carregar_dados() -> pd.DataFrame:
 
         for col in COLUNAS:
             if col not in dados.columns:
-                if col == 'STATUS':
-                    dados[col] = "FINALIZADO"
                 elif col == 'DEFEITO':
                     dados[col] = "NÃO INFORMADO"
                 elif col == 'SERVIÇO EXECUTADO':
@@ -148,7 +146,7 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
         ["PROPRIETÁRIO", val('PROPRIETÁRIO'), "PLACA", val('PLACA')],
         ["MARCA / MODELO", f"{val('MARCA')} {val('MODELO')}", "ANO", val('ANO DE FABRICAÇÃO')],
         ["KM ATUAL", val('KM ATUAL'), "CHASSI", val('CHASSI')],
-        ["MECÂNICO", val('MECÂNICO'), "STATUS", val('STATUS')],
+        ["MECÂNICO", val('MECÂNICO'), "", ""],
     ]
 
     t_veiculo = Table(
@@ -471,7 +469,6 @@ LISTA_MARCA = [
     "VOLKSWAGEN", "OUTRO"
 ]
 
-LISTA_STATUS = ["NA OFICINA", "EM ORÇAMENTO", "FINALIZADO"]
 
 # ---------------------------------------------------------------------------
 # PERFIS DE ACESSO
@@ -701,7 +698,6 @@ if autenticacao():
                     'CUSTO (R$)':        custo_item,
                     'PAGAMENTO (R$)':    pagamento_item,
                     'MECÂNICO':          responsavel_os,
-                    'STATUS':            status_item,
                 })
                 st.toast("✅ Serviço adicionado!")
                 st.rerun()
@@ -712,7 +708,7 @@ if autenticacao():
             st.markdown("### 📋 RESUMO DA OS")
             df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
             st.dataframe(
-                df_temp[['SERVIÇO', 'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'STATUS']],
+                df_temp[['SERVIÇO', 'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO', 'CUSTO (R$)', 'PAGAMENTO (R$)']],
                 use_container_width=True
             )
             st.write(f"**TOTAL ACUMULADO: R$ {df_temp['CUSTO (R$)'].sum():.2f}**")
@@ -880,9 +876,6 @@ if autenticacao():
                     def_idx = defeitos_ed.index(row['DEFEITO']) if row['DEFEITO'] in defeitos_ed else 0
                     e_defeito = st.selectbox("🔎 DEFEITO IDENTIFICADO", defeitos_ed, index=def_idx, key="e_defeito")
 
-                    status_idx = LISTA_STATUS.index(row['STATUS']) if row['STATUS'] in LISTA_STATUS else 0
-                    e_status = st.selectbox("STATUS DO SERVIÇO", LISTA_STATUS, index=status_idx, key="e_status")
-
                     st.markdown("---")
                     col_d1, col_d2 = st.columns(2)
                     with col_d1:
@@ -928,7 +921,6 @@ if autenticacao():
                                         df_nuvem.loc[idx_escolhido, 'CUSTO (R$)']        = e_custo
                                         df_nuvem.loc[idx_escolhido, 'PAGAMENTO (R$)']    = e_pgto
                                         df_nuvem.loc[idx_escolhido, 'MECÂNICO']          = e_mec
-                                        df_nuvem.loc[idx_escolhido, 'STATUS']            = e_status
                                         df_nuvem.loc[idx_escolhido, 'EDITADO_POR']       = nome
                                         df_nuvem.loc[idx_escolhido, 'DATA_EDICAO']       = agora
 
@@ -983,8 +975,6 @@ if autenticacao():
             with c_busca2:
                 opcoes_mec = ["Todos"] + LISTA_MECANICOS if perfil == "admin" else [nome.upper()]
                 filtro_mec = st.selectbox("FILTRAR POR MECÂNICO", opcoes_mec)
-            with c_busca3:
-                filtro_status = st.selectbox("FILTRAR POR STATUS", ["Todos"] + LISTA_STATUS)
 
             # Aplicar filtros
             df_f = df.copy()
@@ -1000,7 +990,6 @@ if autenticacao():
             if filtro_mec != "Todos":
                 df_f = df_f[df_f['MECÂNICO'] == filtro_mec]
             if filtro_status != "Todos":
-                df_f = df_f[df_f['STATUS'] == filtro_status]
 
             st.write("---")
 
@@ -1021,7 +1010,7 @@ if autenticacao():
 
             colunas_exibir = COLUNAS if perfil == "admin" else [
                 'OS', 'DATA', 'MARCA', 'MODELO', 'PLACA', 'SERVIÇO',
-                'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO', 'STATUS'
+                'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO'
             ]
 
             st.dataframe(
