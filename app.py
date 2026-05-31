@@ -93,8 +93,8 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
     styles = getSampleStyleSheet()
     s_titulo = ParagraphStyle("titulo", fontSize=18, fontName="Helvetica-Bold",
                                alignment=TA_CENTER, spaceAfter=2)
-    s_sub    = ParagraphStyle("sub",    fontSize=10, fontName="Helvetica",
-                               alignment=TA_CENTER, textColor=colors.HexColor("#555555"), spaceAfter=10)
+    s_sub = ParagraphStyle("sub", fontSize=10, fontName="Helvetica",
+                        alignment=TA_CENTER, textColor=colors.HexColor("#555555"), spaceAfter=20)
     s_label  = ParagraphStyle("label",  fontSize=8,  fontName="Helvetica-Bold",
                                textColor=colors.HexColor("#333333"))
     s_valor  = ParagraphStyle("valor",  fontSize=9,  fontName="Helvetica")
@@ -124,9 +124,9 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
     story  = []
 
     # ── Cabeçalho ──────────────────────────────────────────────────────────
-    story.append(Paragraph("🚘 SGM AUTOMOTIVA", s_titulo))
+    story.append(Paragraph("SGM AUTOMOTIVA", s_titulo))
+    story.append(Spacer(1, 6))
     story.append(Paragraph("Sistema de Gestão Mecânica Automotiva", s_sub))
-    story.append(HRFlowable(width="100%", thickness=1.5,
                              color=colors.HexColor("#1a1a2e"), spaceAfter=8))
 
     # Número da OS + Data
@@ -235,13 +235,12 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
     story.append(HRFlowable(width="100%", thickness=0.5,
                              color=colors.HexColor("#cccccc"), spaceAfter=12))
 
-    ass = Table(
-        [[Paragraph("_______________________________\nAssinatura do Cliente", ParagraphStyle(
-              "ass", fontSize=9, fontName="Helvetica", alignment=TA_CENTER)),
-          Paragraph("_______________________________\nResponsável Técnico", ParagraphStyle(
-              "ass", fontSize=9, fontName="Helvetica", alignment=TA_CENTER))]],
-        colWidths=["50%", "50%"]
-    )
+    s_ass = ParagraphStyle("ass", fontSize=9, fontName="Helvetica", alignment=TA_CENTER, leading=16)
+ass = Table(
+    [[Paragraph("_______________________________<br/><br/>Assinatura do Cliente", s_ass),
+      Paragraph("_______________________________<br/><br/>Responsável Técnico", s_ass)]],
+    colWidths=["50%", "50%"]
+)
     story.append(ass)
 
     # ── Rodapé ─────────────────────────────────────────────────────────────
