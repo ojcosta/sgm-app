@@ -104,16 +104,22 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
     # Pega dados do primeiro registro (dados do veículo são iguais em todas as linhas)
     r = linhas_os.iloc[0]
 
-    def val(campo):
+    def val(campo, inteiro=False):
         v = r.get(campo, "")
-        return str(v) if pd.notna(v) and str(v).strip() not in ("", "nan") else "—"
+        if pd.isna(v) or str(v).strip() in ("", "nan"):
+            return "—"
+        if inteiro:
+            try:
+                return str(int(float(v)))
+            except Exception:
+                return str(v)
 
     try:
         data_fmt = pd.to_datetime(r['DATA']).strftime("%d/%m/%Y")
     except Exception:
         data_fmt = val('DATA')
 
-    num_os = val('OS')
+    num_os = val('OS', inteiro=True)
     story  = []
 
     # ── Cabeçalho ──────────────────────────────────────────────────────────
@@ -144,9 +150,9 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
 
     veiculo_data = [
         ["PROPRIETÁRIO", val('PROPRIETÁRIO'), "PLACA", val('PLACA')],
-        ["MARCA / MODELO", f"{val('MARCA')} {val('MODELO')}", "ANO", val('ANO DE FABRICAÇÃO')],
-        ["KM ATUAL", val('KM ATUAL'), "CHASSI", val('CHASSI')],
-        ["MECÂNICO", val('MECÂNICO'), "", ""],
+        ["MARCA / MODELO", f"{val('MARCA')} {val('MODELO')}", "ANO", val('ANO DE FABRICAÇÃO', inteiro=True)],
+        ["KM ATUAL", val('KM ATUAL', inteiro=True), "CHASSI", val('CHASSI')],
+        ["MECÂNICO", val('MECÂNICO'), "MECÂNICO_SPAN", ""],
     ]
 
     t_veiculo = Table(
@@ -155,15 +161,16 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
          for c in veiculo_data],
         colWidths=["22%", "28%", "22%", "28%"]
     )
-    t_veiculo.setStyle(TableStyle([
-        ("BACKGROUND",    (0,0), (0,-1), colors.HexColor("#f0f2f6")),
-        ("BACKGROUND",    (2,0), (2,-1), colors.HexColor("#f0f2f6")),
-        ("BOX",           (0,0), (-1,-1), 0.5, colors.HexColor("#cccccc")),
-        ("INNERGRID",     (0,0), (-1,-1), 0.3, colors.HexColor("#dddddd")),
-        ("TOPPADDING",    (0,0), (-1,-1), 5),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 5),
-        ("LEFTPADDING",   (0,0), (-1,-1), 6),
-    ]))
+  t_veiculo.setStyle(TableStyle([
+    ("BACKGROUND",    (0,0), (0,-1), colors.HexColor("#f0f2f6")),
+    ("BACKGROUND",    (2,0), (2,-1), colors.HexColor("#f0f2f6")),
+    ("BOX",           (0,0), (-1,-1), 0.5, colors.HexColor("#cccccc")),
+    ("INNERGRID",     (0,0), (-1,-1), 0.3, colors.HexColor("#dddddd")),
+    ("TOPPADDING",    (0,0), (-1,-1), 5),
+    ("BOTTOMPADDING", (0,0), (-1,-1), 5),
+    ("LEFTPADDING",   (0,0), (-1,-1), 6),
+    ("SPAN",          (1,3), (3,3)),   # ← ADICIONAR: valor do mecânico ocupa colunas 1 a 3
+]))
     story.append(t_veiculo)
     story.append(Spacer(1, 8))
 
