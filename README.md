@@ -2,7 +2,7 @@
 
 > A real-time automotive workshop management solution built with Python, Streamlit and Google Sheets.
 
-![Python](https://img.shields.io/badge/Python-3.14-blue?style=flat-square&logo=python)
+![Python](https://img.shields.io/badge/Python-3.15-blue?style=flat-square&logo=python)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.57.0-red?style=flat-square&logo=streamlit)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-Live%20Sync-green?style=flat-square&logo=googlesheets)
 ![Version](https://img.shields.io/badge/Version-1.0.0--beta-orange?style=flat-square)
