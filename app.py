@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, date
 
 from streamlit_gsheets import GSheetsConnection
-import hashlib
+import bcrypt
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -15,9 +15,18 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 # ---------------------------------------------------------------------------
 # UTILITÁRIOS DE SEGURANÇA
 # ---------------------------------------------------------------------------
-def _hash(s: str) -> str:
-    """Retorna o SHA-256 da string. Nunca armazene senhas em texto puro."""
-    return hashlib.sha256(s.encode()).hexdigest()
+def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> bool:
+    """
+    Verifica senha contra hash bcrypt armazenado no secrets.toml.
+    Para gerar o hash de uma nova senha, rode no terminal:
+        import bcrypt
+        print(bcrypt.hashpw("sua_senha".encode(), bcrypt.gensalt()).decode())
+    Cole o resultado no secrets.toml no lugar da senha.
+    """
+    try:
+        return bcrypt.checkpw(senha_digitada.encode(), hash_armazenado.encode())
+    except Exception:
+        return False
 
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
@@ -237,7 +246,6 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
                              color=colors.HexColor("#cccccc"), spaceAfter=12))
 
     s_ass = ParagraphStyle("ass", fontSize=9, fontName="Helvetica", alignment=TA_CENTER, leading=16)
-    s_ass = ParagraphStyle("ass", fontSize=9, fontName="Helvetica", alignment=TA_CENTER, leading=16)
     ass = Table(
         [[Paragraph("_______________________________<br/><br/>Assinatura do Cliente", s_ass),
           Paragraph("_______________________________<br/><br/>Responsável Técnico", s_ass)]],
@@ -440,7 +448,7 @@ DEFEITOS_POR_SERVICO = {
         "NÃO VIRA",
         "PANE ELÉTRICA",
         "QUADRO DE BORDO COM DEFEITO",
-        "RELES COM DEFEITO"
+        "RELES COM DEFEITO",
         "SENSOR COM FALHA",
         "SISTEMA DE ÁUDIO COM DEFEITO",
         "OUTROS",
@@ -542,7 +550,7 @@ def autenticacao() -> bool:
                 st.sidebar.error("⚠️ Configuração de usuários ausente nos secrets.")
                 return False
 
-            if usuario_input in usuarios and usuarios[usuario_input] == _hash(senha_input):
+            if usuario_input in usuarios and _verificar_senha(senha_input, usuarios[usuario_input]):
                 st.session_state.logado         = True
                 st.session_state.usuario_nome   = usuario_input
                 st.session_state.usuario_perfil = perfil_do_usuario(usuario_input)
@@ -584,9 +592,9 @@ def autenticacao() -> bool:
             st.info("Utilize seu usuário e senha na barra lateral para acessar.")
 
             c1, c2, c3 = st.columns(3)
-            c1.metric("Status",  "✅ Online")
+            c1.metric("Status",  "Online")
             c2.metric("Versão",  APP_VERSAO)
-            c3.metric("Suporte", "✅ Ativo")
+            c3.metric("Suporte", "Ativo")
 
         return False
 
@@ -725,56 +733,64 @@ if autenticacao():
             col_btn1, col_btn2 = st.columns(2)
 
             with col_btn1:
-                # Confirmação antes de salvar
-                if st.button("💾 FINALIZAR E SALVAR NA NUVEM", type="primary", use_container_width=True):
-                    st.session_state.confirmar_salvar = True
-
-                if st.button("✅ SIM, SALVAR", use_container_width=True):
-                    with st.status("📦 ENVIANDO PARA GOOGLE SHEETS...", expanded=True) as status:
-                        try:
-                            df_nuvem = carregar_dados()
-                            os_definitiva = calcular_proxima_os(df_nuvem)
-                            df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
-                            df_temp['OS'] = os_definitiva
-                            df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
-                            conn.update(
-                                spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"],
-                                data=df_final
-                            )
-
-                            # ── Verificação pós-salvamento ──────────────────────────
-                            df_verificacao = carregar_dados()
-                            duplicadas = pd.to_numeric(df_verificacao['OS'], errors='coerce')
-                            duplicadas = duplicadas[duplicadas == os_definitiva]
-                            if len(duplicadas) > len(df_temp):
-                                st.warning(
-                                    f"⚠️ Atenção: a OS {os_definitiva} pode estar duplicada. "
-                                    f"Verifique o histórico antes de continuar."
-                                )
-                                status.update(label="⚠️ OS salva com possível duplicação.", state="error")
-                            else:
-                                status.update(label="✅ OS SALVA COM SUCESSO!", state="complete", expanded=False)
-                                st.session_state.lista_servicos_temp = []
-                                st.session_state.confirmar_salvar    = False
-                                st.session_state.os_recém_salva      = os_definitiva
-                                st.session_state.df_os_recém_salva   = df_temp.to_dict("records")
-                                st.balloons()
-                                st.rerun()
-
-                        except Exception as e:
-                            st.error(f"❌ Erro ao salvar: {e}")
-                            status.update(label="❌ Falha no envio.", state="error")
-                            
-                    with cc2:
-                        if st.button("❌ CANCELAR", use_container_width=True):
-                            st.session_state.confirmar_salvar = False
-                            st.rerun()
+                # Só mostra o botão FINALIZAR se ainda não está aguardando confirmação
+                if not st.session_state.get("confirmar_salvar"):
+                    if st.button("💾 FINALIZAR E SALVAR NA NUVEM", type="primary", use_container_width=True):
+                        st.session_state.confirmar_salvar = True
+                        st.rerun()
 
             with col_btn2:
                 if st.button("🗑️ DESCARTAR OS", use_container_width=True):
                     st.session_state.lista_servicos_temp = []
                     st.session_state.pop("confirmar_salvar", None)
                     st.rerun()
+
+            # Bloco de confirmação — aparece abaixo dos botões, fora de qualquer coluna
+            if st.session_state.get("confirmar_salvar"):
+                st.warning("⚠️ Confirma o salvamento desta OS? A operação não pode ser desfeita.")
+                cc1, cc2 = st.columns(2)
+
+                with cc1:
+                    if st.button("✅ SIM, SALVAR", type="primary", use_container_width=True):
+                        with st.status("📦 ENVIANDO PARA GOOGLE SHEETS...", expanded=True) as status:
+                            try:
+                                df_nuvem = carregar_dados()
+                                os_definitiva = calcular_proxima_os(df_nuvem)
+                                df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
+                                df_temp['OS'] = os_definitiva
+                                df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
+                                conn.update(
+                                    spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"],
+                                    data=df_final
+                                )
+
+                                # ── Verificação pós-salvamento ──────────────────────────
+                                df_verificacao = carregar_dados()
+                                duplicadas = pd.to_numeric(df_verificacao['OS'], errors='coerce')
+                                duplicadas = duplicadas[duplicadas == os_definitiva]
+                                if len(duplicadas) > len(df_temp):
+                                    st.warning(
+                                        f"⚠️ Atenção: a OS {os_definitiva} pode estar duplicada. "
+                                        f"Verifique o histórico antes de continuar."
+                                    )
+                                    status.update(label="⚠️ OS salva com possível duplicação.", state="error")
+                                else:
+                                    status.update(label="✅ OS SALVA COM SUCESSO!", state="complete", expanded=False)
+                                    st.session_state.lista_servicos_temp = []
+                                    st.session_state.confirmar_salvar    = False
+                                    st.session_state.os_recém_salva      = os_definitiva
+                                    st.session_state.df_os_recém_salva   = df_temp.to_dict("records")
+                                    st.balloons()
+                                    st.rerun()
+
+                            except Exception as e:
+                                st.error(f"❌ Erro ao salvar: {e}")
+                                status.update(label="❌ Falha no envio.", state="error")
+
+                with cc2:
+                    if st.button("❌ CANCELAR", use_container_width=True):
+                        st.session_state.confirmar_salvar = False
+                        st.rerun()
 
         # --- Botão de impressão da OS recém-salva ---
         os_recente = st.session_state.get("os_recém_salva")
