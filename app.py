@@ -105,14 +105,15 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
     r = linhas_os.iloc[0]
 
     def val(campo, inteiro=False):
-        v = r.get(campo, "")
-        if pd.isna(v) or str(v).strip() in ("", "nan"):
-            return "—"
-        if inteiro:
-            try:
-                return str(int(float(v)))
-            except Exception:
-                return str(v)
+    v = r.get(campo, "")
+    if pd.isna(v) or str(v).strip() in ("", "nan"):
+        return "—"
+    if inteiro:
+        try:
+            return str(int(float(v)))
+        except Exception:
+            pass
+    return str(v)
 
     try:
         data_fmt = pd.to_datetime(r['DATA']).strftime("%d/%m/%Y")
@@ -152,7 +153,7 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
         ["PROPRIETÁRIO", val('PROPRIETÁRIO'), "PLACA", val('PLACA')],
         ["MARCA / MODELO", f"{val('MARCA')} {val('MODELO')}", "ANO", val('ANO DE FABRICAÇÃO', inteiro=True)],
         ["KM ATUAL", val('KM ATUAL', inteiro=True), "CHASSI", val('CHASSI')],
-        ["MECÂNICO", val('MECÂNICO'), "MECÂNICO_SPAN", ""],
+        ["MECÂNICO", val('MECÂNICO'), "", ""],
     ]
 
     t_veiculo = Table(
