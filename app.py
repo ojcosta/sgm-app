@@ -520,7 +520,7 @@ if autenticacao():
                     'CUSTO (R$)':        custo_item,
                     'PAGAMENTO (R$)':    pagamento_item,
                     'MECÂNICO':          responsavel_os,
-                    'STATUS':            status_item,
+                    'STATUS':            "NA OFICINA",
                 })
                 st.toast("✅ Serviço adicionado!")
                 st.rerun()
@@ -531,7 +531,7 @@ if autenticacao():
             st.markdown("### 📋 RESUMO DA OS")
             df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
             st.dataframe(
-                df_temp[['SERVIÇO', 'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO', 'CUSTO (R$)', 'PAGAMENTO (R$)', 'STATUS']],
+                df_temp[['SERVIÇO', 'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO', 'CUSTO (R$)', 'PAGAMENTO (R$)']],
                 use_container_width=True
             )
             st.write(f"**TOTAL ACUMULADO: R$ {df_temp['CUSTO (R$)'].sum():.2f}**")
