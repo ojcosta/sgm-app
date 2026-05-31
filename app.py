@@ -237,11 +237,12 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
                              color=colors.HexColor("#cccccc"), spaceAfter=12))
 
     s_ass = ParagraphStyle("ass", fontSize=9, fontName="Helvetica", alignment=TA_CENTER, leading=16)
-ass = Table(
-    [[Paragraph("_______________________________<br/><br/>Assinatura do Cliente", s_ass),
-      Paragraph("_______________________________<br/><br/>Responsável Técnico", s_ass)]],
-    colWidths=["50%", "50%"]
-)
+    s_ass = ParagraphStyle("ass", fontSize=9, fontName="Helvetica", alignment=TA_CENTER, leading=16)
+    ass = Table(
+        [[Paragraph("_______________________________<br/><br/>Assinatura do Cliente", s_ass),
+          Paragraph("_______________________________<br/><br/>Responsável Técnico", s_ass)]],
+        colWidths=["50%", "50%"]
+    )
     story.append(ass)
 
     # ── Rodapé ─────────────────────────────────────────────────────────────
