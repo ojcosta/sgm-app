@@ -49,7 +49,7 @@ def carregar_dados() -> pd.DataFrame:
 
         for col in COLUNAS:
             if col not in dados.columns:
-                elif col == 'DEFEITO':
+                if col == 'DEFEITO':
                     dados[col] = "NÃO INFORMADO"
                 elif col == 'SERVIÇO EXECUTADO':
                     dados[col] = "NÃO INFORMADO"
