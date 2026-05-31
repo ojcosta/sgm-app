@@ -729,33 +729,42 @@ if autenticacao():
                 if st.button("💾 FINALIZAR E SALVAR NA NUVEM", type="primary", use_container_width=True):
                     st.session_state.confirmar_salvar = True
 
-                if st.session_state.get("confirmar_salvar"):
-                    st.warning("⚠️ Tem certeza que deseja salvar esta OS?")
-                    cc1, cc2 = st.columns(2)
-                    with cc1:
-                        if st.button("✅ SIM, SALVAR", use_container_width=True):
-                            with st.status("📦 ENVIANDO PARA GOOGLE SHEETS...", expanded=True) as status:
-                                try:
-                                    # Relê o Sheets agora para pegar o número de OS correto
-                                    df_nuvem = carregar_dados()
-                                    os_definitiva = calcular_proxima_os(df_nuvem)
-                                    df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
-                                    df_temp['OS'] = os_definitiva
-                                    df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
-                                    conn.update(
-                                        spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"],
-                                        data=df_final
-                                    )
-                                    status.update(label="✅ OS SALVA COM SUCESSO!", state="complete", expanded=False)
-                                    st.session_state.lista_servicos_temp = []
-                                    st.session_state.confirmar_salvar    = False
-                                    st.session_state.os_recém_salva      = os_definitiva
-                                    st.session_state.df_os_recém_salva   = df_temp.to_dict("records")
-                                    st.balloons()
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Erro ao salvar: {e}")
-                                    status.update(label="❌ Falha no envio.", state="error")
+                if st.button("✅ SIM, SALVAR", use_container_width=True):
+                    with st.status("📦 ENVIANDO PARA GOOGLE SHEETS...", expanded=True) as status:
+                        try:
+                            df_nuvem = carregar_dados()
+                            os_definitiva = calcular_proxima_os(df_nuvem)
+                            df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
+                            df_temp['OS'] = os_definitiva
+                            df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
+                            conn.update(
+                                spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"],
+                                data=df_final
+                            )
+
+                            # ── Verificação pós-salvamento ──────────────────────────
+                            df_verificacao = carregar_dados()
+                            duplicadas = pd.to_numeric(df_verificacao['OS'], errors='coerce')
+                            duplicadas = duplicadas[duplicadas == os_definitiva]
+                            if len(duplicadas) > len(df_temp):
+                                st.warning(
+                                    f"⚠️ Atenção: a OS {os_definitiva} pode estar duplicada. "
+                                    f"Verifique o histórico antes de continuar."
+                                )
+                                status.update(label="⚠️ OS salva com possível duplicação.", state="error")
+                            else:
+                                status.update(label="✅ OS SALVA COM SUCESSO!", state="complete", expanded=False)
+                                st.session_state.lista_servicos_temp = []
+                                st.session_state.confirmar_salvar    = False
+                                st.session_state.os_recém_salva      = os_definitiva
+                                st.session_state.df_os_recém_salva   = df_temp.to_dict("records")
+                                st.balloons()
+                                st.rerun()
+
+                        except Exception as e:
+                            st.error(f"❌ Erro ao salvar: {e}")
+                            status.update(label="❌ Falha no envio.", state="error")
+                            
                     with cc2:
                         if st.button("❌ CANCELAR", use_container_width=True):
                             st.session_state.confirmar_salvar = False
