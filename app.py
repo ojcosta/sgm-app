@@ -124,10 +124,11 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
     story  = []
 
     # ── Cabeçalho ──────────────────────────────────────────────────────────
-    story.append(Paragraph("SGM AUTOMOTIVA", s_titulo))
-    story.append(Spacer(1, 6))
-    story.append(Paragraph("Sistema de Gestão Mecânica Automotiva", s_sub))
-                             color=colors.HexColor("#1a1a2e"), spaceAfter=8))
+story.append(Paragraph("SGM AUTOMOTIVA", s_titulo))
+story.append(Spacer(1, 6))
+story.append(Paragraph("Sistema de Gestão Mecânica Automotiva", s_sub))
+story.append(HRFlowable(width="100%", thickness=1.5,
+                         color=colors.HexColor("#1a1a2e"), spaceAfter=8))
 
     # Número da OS + Data
     os_data = Table(
