@@ -279,6 +279,17 @@ DEFEITOS_POR_SERVICO = {
         "ESPECIFICAR NO CAMPO DE DIAGNÓSTICO",
     ],
 }
+LISTA_SERVICOS = list(DEFEITOS_POR_SERVICO.keys())
+
+LISTA_MECANICOS = ["JONAS COSTA", "REBECA ALVES", "WILSON ALVES"]
+
+LISTA_MARCA = [
+    "AUDI", "BMW", "BYD", "CHEVROLET", "CITROËN", "FIAT", "FORD",
+    "HONDA", "HYUNDAI", "INFINITI", "JAGUAR", "JEEP", "LEXUS", "MAZDA",
+    "MERCEDES-BENZ", "MITSUBISHI", "NISSAN", "RENAULT", "TOYOTA",
+    "VOLKSWAGEN", "OUTRO"
+]
+
 LISTA_STATUS = ["NA OFICINA", "EM ORÇAMENTO", "FINALIZADO"]
 
 # ---------------------------------------------------------------------------
