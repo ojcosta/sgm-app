@@ -989,7 +989,6 @@ if autenticacao():
                 ]
             if filtro_mec != "Todos":
                 df_f = df_f[df_f['MECÂNICO'] == filtro_mec]
-            if filtro_status != "Todos":
 
             st.write("---")
 
