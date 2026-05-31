@@ -473,8 +473,6 @@ if autenticacao():
         defeitos_disponiveis = DEFEITOS_POR_SERVICO.get(servico_item, ["ESPECIFICAR NO CAMPO DE DIAGNÓSTICO"])
         defeito_item = st.selectbox("🔎 DEFEITO IDENTIFICADO", defeitos_disponiveis)
 
-        status_item = st.selectbox("STATUS DO SERVIÇO", LISTA_STATUS)
-
         st.markdown("---")
         col_diag1, col_diag2 = st.columns(2)
         with col_diag1:
