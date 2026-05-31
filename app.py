@@ -28,7 +28,8 @@ COLUNAS = [
     'OS', 'DATA', 'MARCA', 'MODELO', 'KM ATUAL', 'PROPRIETÁRIO',
     'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'DEFEITO',
     'DIAGNÓSTICO', 'SERVIÇO EXECUTADO',
-    'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'STATUS'
+    'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO', 'STATUS',
+    'EDITADO_POR', 'DATA_EDICAO'
 ]
 
 def carregar_dados() -> pd.DataFrame:
@@ -47,6 +48,8 @@ def carregar_dados() -> pd.DataFrame:
                     dados[col] = "NÃO INFORMADO"
                 elif col == 'SERVIÇO EXECUTADO':
                     dados[col] = "NÃO INFORMADO"
+                elif col in ('EDITADO_POR', 'DATA_EDICAO'):
+                    dados[col] = ""
                 else:
                     dados[col] = None
 
@@ -417,7 +420,7 @@ if autenticacao():
 
     # Menu adaptado ao perfil
     if perfil == "admin":
-        menu = ["REGISTRAR O.S", "HISTÓRICO E FINANCEIRO", "SOBRE O APP"]
+        menu = ["REGISTRAR O.S", "EDITAR O.S", "HISTÓRICO E FINANCEIRO", "SOBRE O APP"]
     else:
         menu = ["REGISTRAR O.S", "MINHAS ORDENS DE SERVIÇO", "SOBRE O APP"]
 
@@ -577,6 +580,170 @@ if autenticacao():
                     st.session_state.lista_servicos_temp = []
                     st.session_state.pop("confirmar_salvar", None)
                     st.rerun()
+
+    # -----------------------------------------------------------------------
+    # TELA: EDITAR O.S (somente admin)
+    # -----------------------------------------------------------------------
+    elif escolha == "EDITAR O.S":
+        st.subheader("✏️ EDITAR ORDEM DE SERVIÇO")
+
+        if df.empty:
+            st.info("NENHUM REGISTRO ENCONTRADO.")
+        else:
+            st.markdown("### 🔎 Localizar OS pelo número")
+            num_os = st.number_input(
+                "NÚMERO DA OS", min_value=1, step=1, format="%d",
+                help="Digite o número exato da OS que deseja editar."
+            )
+
+            if st.button("🔍 BUSCAR OS", use_container_width=False):
+                st.session_state.os_buscada = int(num_os)
+                st.session_state.pop("confirmar_edicao", None)
+
+            os_buscada = st.session_state.get("os_buscada")
+
+            if os_buscada:
+                linhas = df[pd.to_numeric(df['OS'], errors='coerce') == os_buscada]
+
+                if linhas.empty:
+                    st.error(f"⚠️ OS nº {os_buscada} não encontrada.")
+                else:
+                    # Se a OS tiver mais de uma linha (múltiplos serviços),
+                    # exibe todas e o admin escolhe qual linha editar
+                    if len(linhas) > 1:
+                        st.info(f"A OS {os_buscada} possui **{len(linhas)} linhas** (múltiplos serviços). Selecione qual deseja editar:")
+                        idx_escolhido = st.selectbox(
+                            "LINHA DA OS",
+                            options=linhas.index.tolist(),
+                            format_func=lambda i: f"Serviço: {linhas.loc[i, 'SERVIÇO']} | Defeito: {linhas.loc[i, 'DEFEITO']} | Mecânico: {linhas.loc[i, 'MECÂNICO']}"
+                        )
+                    else:
+                        idx_escolhido = linhas.index[0]
+
+                    row = df.loc[idx_escolhido]
+
+                    st.markdown(f"---\n### 📋 Editando OS **{os_buscada}**")
+
+                    # Última edição (auditoria)
+                    if pd.notna(row.get('EDITADO_POR')) and str(row.get('EDITADO_POR', '')).strip():
+                        st.caption(f"📝 Última edição por **{row['EDITADO_POR']}** em {row['DATA_EDICAO']}")
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        # DATA
+                        try:
+                            data_val = pd.to_datetime(row['DATA']).date()
+                        except Exception:
+                            data_val = date.today()
+                        e_data = st.date_input("DATA DO SERVIÇO", value=data_val, key="e_data")
+
+                        # MARCA
+                        marca_idx = LISTA_MARCA.index(row['MARCA']) if row['MARCA'] in LISTA_MARCA else len(LISTA_MARCA) - 1
+                        e_marca = st.selectbox("MARCA", LISTA_MARCA, index=marca_idx, key="e_marca")
+
+                        e_modelo = st.text_input("MODELO", value=str(row['MODELO']), key="e_modelo")
+                        e_km     = st.number_input("KM ATUAL", min_value=0, step=1,
+                                                   value=int(pd.to_numeric(row['KM ATUAL'], errors='coerce') or 0),
+                                                   format="%d", key="e_km")
+                    with col2:
+                        e_prop   = st.text_input("PROPRIETÁRIO", value=str(row['PROPRIETÁRIO']), key="e_prop")
+                        e_placa  = st.text_input("PLACA", value=str(row['PLACA']), key="e_placa").upper()
+                        e_ano    = st.number_input("ANO DE FABRICAÇÃO", min_value=1910,
+                                                   max_value=datetime.now().year + 1, step=1,
+                                                   value=int(pd.to_numeric(row['ANO DE FABRICAÇÃO'], errors='coerce') or 2000),
+                                                   format="%d", key="e_ano")
+                        e_chassi = st.text_input("CHASSI", value=str(row['CHASSI']), key="e_chassi").upper()
+
+                    st.divider()
+                    c1, c2, c3, c4 = st.columns([4, 3, 2, 2])
+                    with c1:
+                        serv_idx = LISTA_SERVICOS.index(row['SERVIÇO']) if row['SERVIÇO'] in LISTA_SERVICOS else 0
+                        e_servico = st.selectbox("GRUPO DO SERVIÇO", LISTA_SERVICOS, index=serv_idx, key="e_servico")
+                    with c2:
+                        e_custo = st.number_input("CUSTO DO REPARO (R$)", min_value=0.0, step=10.0, format="%.2f",
+                                                  value=float(pd.to_numeric(row['CUSTO (R$)'], errors='coerce') or 0.0),
+                                                  key="e_custo")
+                    with c3:
+                        e_pgto  = st.number_input("PAGAMENTO RECEBIDO (R$)", min_value=0.0, step=10.0, format="%.2f",
+                                                  value=float(pd.to_numeric(row['PAGAMENTO (R$)'], errors='coerce') or 0.0),
+                                                  key="e_pgto")
+                    with c4:
+                        mec_idx = LISTA_MECANICOS.index(row['MECÂNICO']) if row['MECÂNICO'] in LISTA_MECANICOS else 0
+                        e_mec   = st.selectbox("MECÂNICO RESPONSÁVEL", LISTA_MECANICOS, index=mec_idx, key="e_mec")
+
+                    # Defeito filtrado pelo serviço escolhido
+                    defeitos_ed = DEFEITOS_POR_SERVICO.get(e_servico, ["ESPECIFICAR NO CAMPO DE DIAGNÓSTICO"])
+                    def_idx = defeitos_ed.index(row['DEFEITO']) if row['DEFEITO'] in defeitos_ed else 0
+                    e_defeito = st.selectbox("🔎 DEFEITO IDENTIFICADO", defeitos_ed, index=def_idx, key="e_defeito")
+
+                    status_idx = LISTA_STATUS.index(row['STATUS']) if row['STATUS'] in LISTA_STATUS else 0
+                    e_status = st.selectbox("STATUS DO SERVIÇO", LISTA_STATUS, index=status_idx, key="e_status")
+
+                    st.markdown("---")
+                    col_d1, col_d2 = st.columns(2)
+                    with col_d1:
+                        e_diag = st.text_area("🩺 DIAGNÓSTICO DO MECÂNICO", value=str(row['DIAGNÓSTICO']), key="e_diag")
+                    with col_d2:
+                        e_exec = st.text_area("🔧 SERVIÇO EXECUTADO", value=str(row['SERVIÇO EXECUTADO']), key="e_exec")
+
+                    st.markdown("---")
+                    if st.button("💾 SALVAR ALTERAÇÕES", type="primary", use_container_width=True):
+                        erros_ed = []
+                        if not e_placa.strip():   erros_ed.append("Placa")
+                        if not e_modelo.strip():  erros_ed.append("Modelo")
+                        if not e_diag.strip():    erros_ed.append("Diagnóstico")
+                        if not e_exec.strip():    erros_ed.append("Serviço Executado")
+
+                        if erros_ed:
+                            st.error(f"⚠️ Campos obrigatórios: {', '.join(erros_ed)}.")
+                        else:
+                            st.session_state.confirmar_edicao = True
+
+                    if st.session_state.get("confirmar_edicao"):
+                        st.warning("⚠️ Confirma a alteração desta OS? A linha será sobrescrita no Google Sheets.")
+                        cc1, cc2 = st.columns(2)
+                        with cc1:
+                            if st.button("✅ SIM, ALTERAR", use_container_width=True, key="btn_sim_edit"):
+                                with st.status("📦 ATUALIZANDO NO GOOGLE SHEETS...", expanded=True) as s_edit:
+                                    try:
+                                        df_nuvem = carregar_dados()
+                                        agora    = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+                                        df_nuvem.loc[idx_escolhido, 'DATA']              = str(e_data)
+                                        df_nuvem.loc[idx_escolhido, 'MARCA']             = e_marca
+                                        df_nuvem.loc[idx_escolhido, 'MODELO']            = e_modelo.strip()
+                                        df_nuvem.loc[idx_escolhido, 'KM ATUAL']          = e_km
+                                        df_nuvem.loc[idx_escolhido, 'PROPRIETÁRIO']      = e_prop.strip()
+                                        df_nuvem.loc[idx_escolhido, 'PLACA']             = e_placa.strip()
+                                        df_nuvem.loc[idx_escolhido, 'ANO DE FABRICAÇÃO'] = e_ano
+                                        df_nuvem.loc[idx_escolhido, 'CHASSI']            = e_chassi.strip()
+                                        df_nuvem.loc[idx_escolhido, 'SERVIÇO']           = e_servico
+                                        df_nuvem.loc[idx_escolhido, 'DEFEITO']           = e_defeito
+                                        df_nuvem.loc[idx_escolhido, 'DIAGNÓSTICO']       = e_diag.strip()
+                                        df_nuvem.loc[idx_escolhido, 'SERVIÇO EXECUTADO'] = e_exec.strip()
+                                        df_nuvem.loc[idx_escolhido, 'CUSTO (R$)']        = e_custo
+                                        df_nuvem.loc[idx_escolhido, 'PAGAMENTO (R$)']    = e_pgto
+                                        df_nuvem.loc[idx_escolhido, 'MECÂNICO']          = e_mec
+                                        df_nuvem.loc[idx_escolhido, 'STATUS']            = e_status
+                                        df_nuvem.loc[idx_escolhido, 'EDITADO_POR']       = nome
+                                        df_nuvem.loc[idx_escolhido, 'DATA_EDICAO']       = agora
+
+                                        conn.update(
+                                            spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"],
+                                            data=df_nuvem
+                                        )
+                                        s_edit.update(label="✅ OS ATUALIZADA COM SUCESSO!", state="complete", expanded=False)
+                                        st.session_state.pop("os_buscada", None)
+                                        st.session_state.pop("confirmar_edicao", None)
+                                        st.balloons()
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"❌ Erro ao atualizar: {e}")
+                                        s_edit.update(label="❌ Falha na atualização.", state="error")
+                        with cc2:
+                            if st.button("❌ CANCELAR", use_container_width=True, key="btn_cancel_edit"):
+                                st.session_state.pop("confirmar_edicao", None)
+                                st.rerun()
 
     # -----------------------------------------------------------------------
     # TELA: HISTÓRICO E FINANCEIRO (admin) / MINHAS ORDENS (mecânico)
