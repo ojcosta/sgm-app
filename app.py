@@ -161,7 +161,7 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
          for c in veiculo_data],
         colWidths=["22%", "28%", "22%", "28%"]
     )
-  t_veiculo.setStyle(TableStyle([
+    t_veiculo.setStyle(TableStyle([
     ("BACKGROUND",    (0,0), (0,-1), colors.HexColor("#f0f2f6")),
     ("BACKGROUND",    (2,0), (2,-1), colors.HexColor("#f0f2f6")),
     ("BOX",           (0,0), (-1,-1), 0.5, colors.HexColor("#cccccc")),
