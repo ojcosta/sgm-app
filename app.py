@@ -15,18 +15,30 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 # ---------------------------------------------------------------------------
 # UTILITÁRIOS DE SEGURANÇA
 # ---------------------------------------------------------------------------
-def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> bool:
+def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> tuple[bool, str]:
     """
     Verifica senha contra hash bcrypt armazenado no secrets.toml.
     Para gerar o hash de uma nova senha, rode no terminal:
         import bcrypt
         print(bcrypt.hashpw("sua_senha".encode(), bcrypt.gensalt()).decode())
     Cole o resultado no secrets.toml no lugar da senha.
+
+    Retorna (sucesso, motivo_tecnico). O motivo_tecnico é só para debug —
+    NUNCA deve ser exibido a usuários finais em produção.
     """
+    if not hash_armazenado:
+        return False, "HASH_VAZIO"
+
+    hash_armazenado = hash_armazenado.strip()  # remove espaço/quebra de linha colados sem querer
+
+    if not hash_armazenado.startswith(("$2a$", "$2b$", "$2y$")):
+        return False, "HASH_ARMAZENADO_NAO_E_BCRYPT"
+
     try:
-        return bcrypt.checkpw(senha_digitada.encode(), hash_armazenado.encode())
-    except Exception:
-        return False
+        ok = bcrypt.checkpw(senha_digitada.encode(), hash_armazenado.encode())
+        return ok, ("SENHA_CORRETA" if ok else "SENHA_INCORRETA")
+    except Exception as e:
+        return False, f"ERRO_VERIFICACAO: {type(e).__name__}"
 
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
@@ -550,13 +562,19 @@ def autenticacao() -> bool:
                 st.sidebar.error("⚠️ Configuração de usuários ausente nos secrets.")
                 return False
 
-            if usuario_input in usuarios and _verificar_senha(senha_input, usuarios[usuario_input]):
-                st.session_state.logado         = True
-                st.session_state.usuario_nome   = usuario_input
-                st.session_state.usuario_perfil = perfil_do_usuario(usuario_input)
-                st.rerun()
+            if usuario_input in usuarios:
+                ok, motivo = _verificar_senha(senha_input, usuarios[usuario_input])
+                if ok:
+                    st.session_state.logado         = True
+                    st.session_state.usuario_nome   = usuario_input
+                    st.session_state.usuario_perfil = perfil_do_usuario(usuario_input)
+                    st.rerun()
+                else:
+                    st.sidebar.error("Usuário ou senha inválidos.")
+                    st.sidebar.caption(f"[debug] {motivo}")  # REMOVER depois de diagnosticar
             else:
                 st.sidebar.error("Usuário ou senha inválidos.")
+                st.sidebar.caption("[debug] USUARIO_NAO_ENCONTRADO")  # REMOVER depois de diagnosticar
 
         st.sidebar.markdown(
             f"<div style='margin-top:auto;padding-top:2rem;"
