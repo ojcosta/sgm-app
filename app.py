@@ -563,8 +563,7 @@ def autenticacao() -> bool:
                 return False
 
             if usuario_input in usuarios:
-                if usuario_input in usuarios:
-    st.sidebar.caption(f"[debug] hash no secrets: {usuarios[usuario_input][:20]}...")
+                st.sidebar.caption(f"[debug] hash no secrets: {usuarios[usuario_input][:20]}...")  # REMOVER depois de diagnosticar
                 ok, motivo = _verificar_senha(senha_input, usuarios[usuario_input])
                 if ok:
                     st.session_state.logado         = True
