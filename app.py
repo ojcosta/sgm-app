@@ -563,7 +563,6 @@ def autenticacao() -> bool:
                 return False
 
             if usuario_input in usuarios:
-                st.sidebar.caption(f"[debug] hash no secrets: {usuarios[usuario_input][:20]}...")  # REMOVER depois de diagnosticar
                 ok, motivo = _verificar_senha(senha_input, usuarios[usuario_input])
                 if ok:
                     st.session_state.logado         = True
@@ -572,10 +571,8 @@ def autenticacao() -> bool:
                     st.rerun()
                 else:
                     st.sidebar.error("Usuário ou senha inválidos.")
-                    st.sidebar.caption(f"[debug] {motivo}")  # REMOVER depois de diagnosticar
             else:
                 st.sidebar.error("Usuário ou senha inválidos.")
-                st.sidebar.caption("[debug] USUARIO_NAO_ENCONTRADO")  # REMOVER depois de diagnosticar
 
         st.sidebar.markdown(
             f"<div style='margin-top:auto;padding-top:2rem;"
