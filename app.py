@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 from datetime import datetime, date
 
 from streamlit_gsheets import GSheetsConnection
@@ -43,7 +44,7 @@ def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> tuple[bool, s
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.0.5"
+APP_VERSAO = "1.0.6"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
@@ -1163,17 +1164,25 @@ if autenticacao():
                     # to_period('M') garante ordenação cronológica correta (não alfabética por string).
                     df_mensal['MES_REF'] = df_mensal['DATA_DT'].dt.to_period('M')
 
-                    resumo_mensal = (
+                    # Preenche gaps internos (ex: junho sem registro entre maio
+                    # e julho) com 0 explícito, mas SOMENTE entre o primeiro e o
+                    # último mês que de fato têm dado — nunca usando o filtro de
+                    # busca (data_inicio/data_fim), cujo default é 2020 até hoje
+                    # e geraria dezenas de linhas zeradas sem necessidade.
+                    mes_min = df_mensal['MES_REF'].min()
+                    mes_max = df_mensal['MES_REF'].max()
+                    periodo_completo = pd.period_range(start=mes_min, end=mes_max, freq='M')
+                    tabela_periodo = (
                         df_mensal.groupby('MES_REF')[['PAGAMENTO_NUM', 'CUSTO_NUM']]
                         .sum()
-                        .sort_index()
+                        .reindex(periodo_completo, fill_value=0)
                     )
-                    resumo_mensal['SALDO'] = resumo_mensal['PAGAMENTO_NUM'] - resumo_mensal['CUSTO_NUM']
-                    resumo_mensal.index = resumo_mensal.index.strftime('%m/%Y')
-                    resumo_mensal.columns = ['Faturamento (R$)', 'Custo (R$)', 'Saldo (R$)']
+                    tabela_periodo['SALDO'] = tabela_periodo['PAGAMENTO_NUM'] - tabela_periodo['CUSTO_NUM']
+                    tabela_periodo.index = tabela_periodo.index.strftime('%m/%Y')
+                    tabela_periodo.columns = ['Faturamento (R$)', 'Custo (R$)', 'Saldo (R$)']
 
                     st.dataframe(
-                        resumo_mensal,
+                        tabela_periodo,
                         use_container_width=True,
                         column_config={
                             "Faturamento (R$)": st.column_config.NumberColumn(format="R$ %.2f"),
@@ -1182,7 +1191,22 @@ if autenticacao():
                         }
                     )
 
-                    st.bar_chart(resumo_mensal[['Faturamento (R$)', 'Custo (R$)']])
+                    grafico_dados = (
+                        tabela_periodo[['Faturamento (R$)', 'Custo (R$)']]
+                        .reset_index()
+                        .rename(columns={'index': 'Mês'})
+                        .melt(id_vars='Mês', var_name='Tipo', value_name='Valor')
+                    )
+
+                    grafico = alt.Chart(grafico_dados).mark_bar(size=18).encode(
+                        x=alt.X('Mês:N', sort=list(tabela_periodo.index), title=None),
+                        y=alt.Y('Valor:Q', title='R$'),
+                        color=alt.Color('Tipo:N', title=None),
+                        xOffset='Tipo:N',
+                        tooltip=['Mês', 'Tipo', alt.Tooltip('Valor:Q', format=',.2f')]
+                    ).properties(height=320)
+
+                    st.altair_chart(grafico, use_container_width=True)
             else:
                 st.metric("TOTAL DE OS", len(df_f))
 
