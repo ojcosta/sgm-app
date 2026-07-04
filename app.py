@@ -136,11 +136,29 @@ def diagnosticar_qualidade_dados(df: pd.DataFrame) -> dict:
                                "PROBLEMA": f"valor negativo: {numeros[idx]}"})
 
     # --- Números de OS duplicados (colisão do max()+1 sob concorrência) ---
+    # ATENÇÃO: uma mesma OS pode ter várias linhas LEGITIMAMENTE, quando o
+    # atendimento envolve múltiplos serviços — ver gerar_pdf_os(), que já
+    # assume "linhas_os" no plural para uma mesma OS. Duplicidade só é
+    # sintoma de corrupção real quando o mesmo número de OS aparece em
+    # veículos DIFERENTES (placa ou chassi divergentes dentro do mesmo
+    # número) — isso sim indica colisão de geração concorrente.
     os_num = pd.to_numeric(df['OS'], errors='coerce')
-    duplicados = os_num[os_num.notna() & os_num.duplicated(keep=False)]
-    for os_val in sorted(duplicados.unique()):
-        problemas.append({"OS": os_val, "CAMPO": "OS",
-                           "PROBLEMA": "número de OS duplicado (colisão de geração/edição concorrente)"})
+    df_os_valido = df[os_num.notna()].copy()
+    df_os_valido['_OS_NUM'] = os_num[os_num.notna()]
+
+    for os_val, grupo in df_os_valido.groupby('_OS_NUM'):
+        if len(grupo) <= 1:
+            continue
+        placas  = grupo['PLACA'].astype(str).str.strip().str.upper().replace({"NAN": ""}).unique()
+        chassis = grupo['CHASSI'].astype(str).str.strip().str.upper().replace({"NAN": ""}).unique()
+        placas  = [p for p in placas if p]
+        chassis = [c for c in chassis if c]
+        if len(placas) > 1 or len(chassis) > 1:
+            problemas.append({
+                "OS": os_val, "CAMPO": "OS",
+                "PROBLEMA": f"mesmo número de OS usado em veículos diferentes "
+                            f"(placas: {', '.join(placas) if placas else '—'}) — colisão de geração de número"
+            })
 
     detalhes = pd.DataFrame(problemas, columns=["OS", "CAMPO", "PROBLEMA"])
     return {"total": len(problemas), "detalhes": detalhes}
