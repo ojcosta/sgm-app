@@ -96,6 +96,55 @@ def calcular_proxima_os(dados: pd.DataFrame) -> int:
     except Exception:
         return len(dados) + 1
 
+
+def diagnosticar_qualidade_dados(df: pd.DataFrame) -> dict:
+    """
+    Verifica a integridade dos dados vindos do Google Sheets.
+
+    Os formulários do app (REGISTRAR O.S / EDITAR O.S) usam number_input
+    com min_value=0.0, então NUNCA produzem texto ou valor negativo em
+    CUSTO/PAGAMENTO. Se este tipo de inconsistência aparecer, a causa é
+    edição manual da planilha por fora do app — o Google Sheets não impõe
+    nenhum schema ou tipo de dado. Esta função existe para tornar esse
+    problema estrutural visível, em vez de deixá-lo mascarado por
+    `errors='coerce'` em cálculos financeiros.
+    """
+    problemas = []
+
+    if df.empty:
+        return {"total": 0, "detalhes": pd.DataFrame(columns=["OS", "CAMPO", "PROBLEMA"])}
+
+    # --- Datas não reconhecíveis ---
+    datas = pd.to_datetime(df['DATA'], errors='coerce')
+    mask_data_ruim = datas.isna() & df['DATA'].notna() & (df['DATA'].astype(str).str.strip() != "")
+    for idx in df.index[mask_data_ruim]:
+        problemas.append({"OS": df.loc[idx, 'OS'], "CAMPO": "DATA",
+                           "PROBLEMA": f"valor não reconhecido: '{df.loc[idx, 'DATA']}'"})
+
+    # --- Custo / Pagamento não numéricos ou negativos ---
+    for campo in ('CUSTO (R$)', 'PAGAMENTO (R$)'):
+        numeros = pd.to_numeric(df[campo], errors='coerce')
+
+        mask_nao_numerico = numeros.isna() & df[campo].notna() & (df[campo].astype(str).str.strip() != "")
+        for idx in df.index[mask_nao_numerico]:
+            problemas.append({"OS": df.loc[idx, 'OS'], "CAMPO": campo,
+                               "PROBLEMA": f"não numérico: '{df.loc[idx, campo]}'"})
+
+        mask_negativo = numeros < 0
+        for idx in df.index[mask_negativo.fillna(False)]:
+            problemas.append({"OS": df.loc[idx, 'OS'], "CAMPO": campo,
+                               "PROBLEMA": f"valor negativo: {numeros[idx]}"})
+
+    # --- Números de OS duplicados (colisão do max()+1 sob concorrência) ---
+    os_num = pd.to_numeric(df['OS'], errors='coerce')
+    duplicados = os_num[os_num.notna() & os_num.duplicated(keep=False)]
+    for os_val in sorted(duplicados.unique()):
+        problemas.append({"OS": os_val, "CAMPO": "OS",
+                           "PROBLEMA": "número de OS duplicado (colisão de geração/edição concorrente)"})
+
+    detalhes = pd.DataFrame(problemas, columns=["OS", "CAMPO", "PROBLEMA"])
+    return {"total": len(problemas), "detalhes": detalhes}
+
 # ---------------------------------------------------------------------------
 # GERAÇÃO DE PDF DA O.S
 # ---------------------------------------------------------------------------
@@ -643,6 +692,13 @@ if autenticacao():
 
     df = carregar_dados()
 
+    if perfil == "admin":
+        _diag = diagnosticar_qualidade_dados(df)
+        if _diag["total"] > 0:
+            with st.sidebar.expander(f"⚠️ {_diag['total']} inconsistência(s) nos dados", expanded=False):
+                st.caption("Detectado(s) na planilha — não podem ter vindo dos formulários do app.")
+                st.dataframe(_diag["detalhes"], hide_index=True, use_container_width=True)
+
     # -----------------------------------------------------------------------
     # TELA: REGISTRAR O.S
     # -----------------------------------------------------------------------
@@ -1056,6 +1112,59 @@ if autenticacao():
                 m1.metric("FATURAMENTO (ENTRADA)", f"R$ {pagamentos_total:,.2f}")
                 m2.metric("CUSTO DE REPARO (SAÍDA)", f"R$ {custos_total:,.2f}")
                 m3.metric("SALDO LÍQUIDO", f"R$ {saldo_liquido:,.2f}", delta=f"{saldo_liquido:,.2f}")
+
+                st.write("---")
+                st.markdown("### 📅 TOTAIS POR MÊS")
+
+                # Linhas com DATA inválida (NaT) não podem ser atribuídas a nenhum mês.
+                qtd_data_invalida = df_f['DATA_DT'].isna().sum()
+
+                # Valores de custo/pagamento não numéricos viram NaN e são tratados como 0 na soma.
+                custo_num = pd.to_numeric(df_f['CUSTO (R$)'], errors='coerce')
+                pagto_num = pd.to_numeric(df_f['PAGAMENTO (R$)'], errors='coerce')
+                qtd_custo_invalido = df_f['CUSTO (R$)'].notna().sum() - custo_num.notna().sum()
+                qtd_pagto_invalido = df_f['PAGAMENTO (R$)'].notna().sum() - pagto_num.notna().sum()
+
+                if qtd_data_invalida or qtd_custo_invalido or qtd_pagto_invalido:
+                    avisos = []
+                    if qtd_data_invalida:
+                        avisos.append(f"{qtd_data_invalida} linha(s) com DATA inválida/vazia (excluídas do resumo mensal)")
+                    if qtd_custo_invalido:
+                        avisos.append(f"{qtd_custo_invalido} linha(s) com CUSTO não numérico (tratado como R$ 0,00)")
+                    if qtd_pagto_invalido:
+                        avisos.append(f"{qtd_pagto_invalido} linha(s) com PAGAMENTO não numérico (tratado como R$ 0,00)")
+                    st.warning("⚠️ Inconsistências encontradas nos dados: " + "; ".join(avisos) + ".")
+
+                df_mensal = df_f.dropna(subset=['DATA_DT']).copy()
+
+                if df_mensal.empty:
+                    st.info("Nenhum registro com data válida no período filtrado.")
+                else:
+                    df_mensal['CUSTO_NUM']    = pd.to_numeric(df_mensal['CUSTO (R$)'], errors='coerce').fillna(0)
+                    df_mensal['PAGAMENTO_NUM'] = pd.to_numeric(df_mensal['PAGAMENTO (R$)'], errors='coerce').fillna(0)
+                    # to_period('M') garante ordenação cronológica correta (não alfabética por string).
+                    df_mensal['MES_REF'] = df_mensal['DATA_DT'].dt.to_period('M')
+
+                    resumo_mensal = (
+                        df_mensal.groupby('MES_REF')[['PAGAMENTO_NUM', 'CUSTO_NUM']]
+                        .sum()
+                        .sort_index()
+                    )
+                    resumo_mensal['SALDO'] = resumo_mensal['PAGAMENTO_NUM'] - resumo_mensal['CUSTO_NUM']
+                    resumo_mensal.index = resumo_mensal.index.strftime('%m/%Y')
+                    resumo_mensal.columns = ['Faturamento (R$)', 'Custo (R$)', 'Saldo (R$)']
+
+                    st.dataframe(
+                        resumo_mensal,
+                        use_container_width=True,
+                        column_config={
+                            "Faturamento (R$)": st.column_config.NumberColumn(format="R$ %.2f"),
+                            "Custo (R$)":       st.column_config.NumberColumn(format="R$ %.2f"),
+                            "Saldo (R$)":       st.column_config.NumberColumn(format="R$ %.2f"),
+                        }
+                    )
+
+                    st.bar_chart(resumo_mensal[['Faturamento (R$)', 'Custo (R$)']])
             else:
                 st.metric("TOTAL DE OS", len(df_f))
 
