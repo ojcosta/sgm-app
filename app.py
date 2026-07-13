@@ -44,7 +44,7 @@ def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> tuple[bool, s
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.0.6"
+APP_VERSAO = "1.1.1"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
@@ -60,6 +60,8 @@ COLUNAS = [
     'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO',
     'EDITADO_POR', 'DATA_EDICAO'
 ]
+
+WORKSHEET_SOLICITACOES = "CADASTROS"
 
 def carregar_dados() -> pd.DataFrame:
     """Lê os dados do Google Sheets. Erros são exibidos ao usuário."""
@@ -85,6 +87,18 @@ def carregar_dados() -> pd.DataFrame:
     except Exception as e:
         st.error(f"⚠️ Erro ao carregar dados do Google Sheets: {e}")
         return pd.DataFrame(columns=COLUNAS)
+
+
+def carregar_solicitacoes() -> pd.DataFrame:
+    """Lê a aba de solicitações de clientes (formulário público)."""
+    try:
+        dados = conn.read(worksheet=WORKSHEET_SOLICITACOES, ttl=0)
+        if dados is None or dados.empty:
+            return pd.DataFrame(columns=["NOME", "TELEFONE", "PLACA", "DEFEITO RELATADO", "DATA DA SOLICITAÇÃO", "STATUS"])
+        return dados
+    except Exception as e:
+        st.error(f"⚠️ Erro ao carregar solicitações: {e}")
+        return pd.DataFrame(columns=["NOME", "TELEFONE", "PLACA", "DEFEITO RELATADO", "DATA DA SOLICITAÇÃO", "STATUS"])
 
 
 def calcular_proxima_os(dados: pd.DataFrame) -> int:
@@ -703,11 +717,11 @@ if autenticacao():
 
     # Menu adaptado ao perfil
     if perfil == "admin":
-        menu = ["REGISTRAR O.S", "EDITAR O.S", "HISTÓRICO E FINANCEIRO", "SOBRE O APP"]
+        menu = ["REGISTRAR O.S", "SOLICITAÇÕES DE CLIENTES", "EDITAR O.S", "HISTÓRICO E FINANCEIRO", "SOBRE O APP"]
     else:
         menu = ["REGISTRAR O.S", "MINHAS ORDENS DE SERVIÇO", "SOBRE O APP"]
 
-    escolha = st.sidebar.selectbox("MENU DE NAVEGAÇÃO:", menu)
+    escolha = st.sidebar.selectbox("MENU DE NAVEGAÇÃO:", menu, key="menu_nav")
 
     df = carregar_dados()
 
@@ -1262,6 +1276,66 @@ if autenticacao():
                         )
                     except Exception as e:
                         st.error(f"Erro ao gerar PDF: {e}")
+
+    # -----------------------------------------------------------------------
+    # TELA: SOLICITAÇÕES DE CLIENTES (somente admin)
+    # -----------------------------------------------------------------------
+    elif escolha == "SOLICITAÇÕES DE CLIENTES":
+        st.subheader("📥 SOLICITAÇÕES DE CLIENTES")
+        st.caption("Pedidos enviados pelo formulário público, antes da chegada do veículo na oficina.")
+
+        df_sol = carregar_solicitacoes()
+
+        if df_sol.empty:
+            st.info("Nenhuma solicitação registrada ainda.")
+        else:
+            pendentes = df_sol[df_sol["STATUS"].astype(str).str.strip().str.lower() == "pendente"]
+
+            if pendentes.empty:
+                st.success("Nenhuma solicitação pendente no momento.")
+            else:
+                st.warning(f"⚠️ {len(pendentes)} solicitação(ões) aguardando análise.")
+
+                for idx, row in pendentes.iterrows():
+                    with st.expander(f"🔧 {row['NOME']} — Placa {row['PLACA']} — {row['DATA DA SOLICITAÇÃO']}"):
+                        st.write(f"**Telefone:** {row['TELEFONE']}")
+                        st.write(f"**Placa:** {row['PLACA']}")
+                        st.write(f"**Defeito relatado pelo cliente:** {row['DEFEITO RELATADO']}")
+
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            if st.button("✅ ACEITAR E PREENCHER O.S", key=f"aceitar_{idx}", use_container_width=True, type="primary"):
+                                # Marca como aceita na planilha
+                                df_sol.loc[idx, "STATUS"] = "aceita"
+                                try:
+                                    conn.update(worksheet=WORKSHEET_SOLICITACOES, data=df_sol)
+                                except Exception as e:
+                                    st.error(f"Erro ao atualizar status: {e}")
+                                    st.stop()
+
+                                # Pré-preenche campos da tela REGISTRAR O.S
+                                st.session_state["placa"] = str(row["PLACA"]).strip().upper()
+                                st.session_state["prop"] = str(row["NOME"]).strip()
+                                st.session_state["diag"] = f"[Relato do cliente via formulário] {row['DEFEITO RELATADO']}"
+
+                                # Redireciona para a tela de registro
+                                st.session_state["menu_nav"] = "REGISTRAR O.S"
+                                st.toast("Solicitação aceita. Complete os dados do veículo em REGISTRAR O.S.")
+                                st.rerun()
+
+                        with col_b:
+                            if st.button("❌ RECUSAR", key=f"recusar_{idx}", use_container_width=True):
+                                df_sol.loc[idx, "STATUS"] = "recusada"
+                                try:
+                                    conn.update(worksheet=WORKSHEET_SOLICITACOES, data=df_sol)
+                                    st.toast("Solicitação recusada.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Erro ao atualizar status: {e}")
+
+            st.markdown("---")
+            with st.expander("📜 Ver histórico completo de solicitações (aceitas/recusadas)"):
+                st.dataframe(df_sol, use_container_width=True, hide_index=True)
 
     # -----------------------------------------------------------------------
     # TELA: SOBRE
