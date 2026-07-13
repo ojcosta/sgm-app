@@ -3,6 +3,10 @@ import pandas as pd
 import altair as alt
 from datetime import datetime, date
 
+# ⚠️ Antes de alterar a aba "CADASTROS" (nome, colunas, valores de STATUS),
+# leia SCHEMA.md — essa estrutura é compartilhada com o repositório
+# sgmaforms, sem checagem automática entre os dois.
+
 from streamlit_gsheets import GSheetsConnection
 import bcrypt
 from io import BytesIO
@@ -44,7 +48,7 @@ def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> tuple[bool, s
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.0.6"
+APP_VERSAO = "1.1.1"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
