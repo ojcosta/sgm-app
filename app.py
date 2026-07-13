@@ -44,7 +44,7 @@ def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> tuple[bool, s
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.1.1"
+APP_VERSAO = "1.0.6"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
@@ -716,6 +716,11 @@ if autenticacao():
         st.rerun()
 
     # Menu adaptado ao perfil
+    # Aplica redirecionamento de menu pendente (definido em telas anteriores),
+    # ANTES do selectbox ser instanciado nesta execução — não pode ser feito depois.
+    if "forcar_menu" in st.session_state:
+        st.session_state["menu_nav"] = st.session_state.pop("forcar_menu")
+
     if perfil == "admin":
         menu = ["REGISTRAR O.S", "SOLICITAÇÕES DE CLIENTES", "EDITAR O.S", "HISTÓRICO E FINANCEIRO", "SOBRE O APP"]
     else:
@@ -1319,7 +1324,7 @@ if autenticacao():
                                 st.session_state["diag"] = f"[Relato do cliente via formulário] {row['DEFEITO RELATADO']}"
 
                                 # Redireciona para a tela de registro
-                                st.session_state["menu_nav"] = "REGISTRAR O.S"
+                                st.session_state["forcar_menu"] = "REGISTRAR O.S"
                                 st.toast("Solicitação aceita. Complete os dados do veículo em REGISTRAR O.S.")
                                 st.rerun()
 
