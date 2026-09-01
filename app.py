@@ -688,14 +688,14 @@ def autenticacao() -> bool:
                     </h1>
                     <p style="margin:0;font-size:15px;opacity:0.6;">
                         Ordens de serviço, histórico de veículos e controle financeiro
-                        da sua oficina em um só lugar.
+                        da sua oficina.
                     </p>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
-            st.info("Utilize seu usuário e senha na barra lateral para acessar.")
+            st.info("Utilize seu usuário e senha na barra lateral para acessar o sistema.")
 
             c1, c2, c3 = st.columns(3)
             c1.metric("Status",  "Online")
