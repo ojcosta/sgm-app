@@ -687,8 +687,7 @@ def autenticacao() -> bool:
                         Sistema de Gestão Mecânica Automotiva
                     </h1>
                     <p style="margin:0;font-size:15px;opacity:0.6;">
-                        Ordens de serviço, histórico de veículos e controle financeiro
-                        da sua oficina.
+                        ORDENS DE SERVIÇO, HISTÓRICO DE VEÍCULOS E CONTROLE FINANCEIRO DA SUA OFICINA.
                     </p>
                 </div>
                 """,
