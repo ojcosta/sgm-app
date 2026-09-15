@@ -1352,7 +1352,7 @@ if autenticacao():
         st.subheader("📱 Sobre o SGMA")
         st.markdown(f"""
         **Desenvolvedor:** Jonas Costa  
-        **Versão:** {APP_VERSAO}
+        **Versão:** {APP_VERSAO} - Beta
 
         O **SGMA** centraliza o registro de ordens de serviço, controle financeiro e histórico de atendimentos da sua oficina em um único lugar.
 
