@@ -83,16 +83,26 @@ Regras (quebrar qualquer uma gera números repetidos ou erro ao salvar):
   string literal em `conn.read(worksheet="CADASTROS", ...)` e
   `conn.update(worksheet="CADASTROS", ...)`.
 
-### Colunas (ordem e nomes EXATOS, incluindo acentos e espaços)
+### Colunas (conferidas na planilha real; nomes EXATOS, incluindo acentos, espaços e a barra)
 
-| Coluna                  | Preenchido por      | Lido por (sgm-app)                          |
-|--------------------------|---------------------|----------------------------------------------|
-| `NOME`                  | sgmaforms           | `row['NOME']` → pré-preenche PROPRIETÁRIO    |
-| `TELEFONE`              | sgmaforms           | `row['TELEFONE']` (exibição)                  |
-| `PLACA`                 | sgmaforms           | `row['PLACA']` → pré-preenche PLACA          |
-| `DEFEITO RELATADO`      | sgmaforms           | `row['DEFEITO RELATADO']` → pré-preenche DIAGNÓSTICO |
-| `DATA DA SOLICITAÇÃO`   | sgmaforms (automático) | exibição apenas                           |
-| `STATUS`                | ambos (ver abaixo)  | filtro de pendentes, atualização de status    |
+| Coluna                  | Preenchido por      | Tipo na planilha       | Lido por (sgm-app)                          |
+|--------------------------|---------------------|------------------------|----------------------------------------------|
+| `NOME`                  | sgmaforms           | texto                  | `row['NOME']` → pré-preenche PROPRIETÁRIO    |
+| `PLACA`                 | sgmaforms           | texto                  | `row['PLACA']` → pré-preenche PLACA          |
+| `MARCA/MODELO`          | sgmaforms           | texto                  | **não usado hoje** (coletado, mas ignorado)  |
+| `ANO`                   | sgmaforms           | **número**             | **não usado hoje**                           |
+| `TELEFONE`              | sgmaforms           | **número**             | `row['TELEFONE']` (exibição)                  |
+| `DEFEITO RELATADO`      | sgmaforms           | texto                  | `row['DEFEITO RELATADO']` → pré-preenche DIAGNÓSTICO |
+| `DATA DA SOLICITAÇÃO`   | sgmaforms (automático) | **data e hora** (`yyyy-mm-dd hh:mm:ss`) | exibição apenas          |
+| `STATUS`                | ambos (ver abaixo)  | texto                  | filtro de pendentes, atualização de status    |
+
+O `sgm-app` lê por **nome** de coluna, então a ordem não importa e colunas extras são toleradas.
+Remover ou renomear qualquer coluna usada acima quebra o painel.
+
+Observações sobre os dados reais:
+- `TELEFONE` e `ANO` são gravados como número. Ao ler, o pandas os converte para decimal
+  (`21989119085.0`, `2009.0`), o que aparece assim na tela se não houver tratamento.
+- O `sgmaforms` não valida o formato da placa (já existe uma placa fora do padrão brasileiro na aba).
 
 ### Valores válidos de `STATUS`
 
