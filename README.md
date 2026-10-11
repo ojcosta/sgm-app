@@ -6,7 +6,7 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-red?style=flat-square&logo=streamlit)
 ![Google Sheets](https://img.shields.io/badge/Database-Google%20Sheets-green?style=flat-square&logo=googlesheets)
 <!-- Keep this badge in sync with APP_VERSAO in app.py -->
-![Version](https://img.shields.io/badge/Version-1.2--beta-orange?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.1.3--beta-orange?style=flat-square)
 
 ---
 
@@ -23,7 +23,7 @@ It is written entirely in Python with Streamlit and uses a Google Sheets spreads
 ## ✨ Features
 
 - 📝 **Service Order (OS) registration** — multi-service orders with vehicle data, responsible mechanic, defect, diagnosis, executed service, cost and payment received. New orders are appended to the spreadsheet and receive a unique OS number reserved in a dedicated tab.
-- ✏️ **OS editing (admin)** — edit any line of an existing OS; the editor and the date of the last edit are recorded.
+- ✏️ **OS editing (admin)** — edit any line of an existing OS. Only the fields you actually changed are written, the editor and date of the last edit are recorded, and the edit is refused if someone else changed that row after you opened it.
 - 📥 **Client requests (admin)** — requests sent through the public companion form (`sgmaforms`) can be accepted or refused; accepting pre-fills the OS registration screen.
 - 🔍 **History & search** — filter by date range, mechanic, and plate or OS number.
 - 💰 **Financial overview (admin)** — totals of cost and payments, including a monthly chart.
@@ -152,7 +152,7 @@ A separate Streamlit app (separate repository, deployment and service account) l
 ## ⚠️ Known limitations
 
 - **Google Sheets is not a transactional database.** There is no referential integrity, no locking, and the Sheets API has request quotas. Every screen interaction triggers a read.
-- **Concurrent writes are only protected where noted.** Registering a new OS appends rows and reserves its number atomically. **Editing an OS and updating client requests still rewrite the whole tab** (clear, then write), so simultaneous edits, or a read during the rewrite, can lose or hide data.
+- **Concurrent writes are only protected where noted.** Registering a new OS appends rows and reserves its number atomically. Editing an OS writes only the changed cells and checks that the row did not change since it was opened (a window of milliseconds remains between the check and the write). **Updating client requests (accept/refuse) still rewrites the whole `CADASTROS` tab** (clear, then write), so simultaneous updates, or a read during the rewrite, can lose or hide data.
 - **OS numbers can have gaps.** A number is reserved before saving; if saving fails, that number is not reused.
 - **PDF totals:** blank cost or payment cells in old rows can make the PDF totals show `nan` (known bug, not fixed yet).
 - **Login has no attempt limit.**
@@ -163,7 +163,8 @@ A separate Streamlit app (separate repository, deployment and service account) l
 
 ## 🗺️ Roadmap
 
-- [ ] Update only the edited row in *Edit OS* and in *Client requests* (no more whole-tab rewrites)
+- [x] Update only the changed cells in *Edit OS* (with conflict detection)
+- [ ] Update only the changed row in *Client requests* (no more whole-tab rewrites)
 - [ ] Fix `nan` totals in the PDF
 - [ ] End-to-end validation of the `sgmaforms` → `CADASTROS` → admin flow
 - [ ] Link an accepted client request to the OS it generated

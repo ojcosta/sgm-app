@@ -51,7 +51,7 @@ A planilha tem **três abas com função definida**. Qualquer outra aba é ignor
 | Operação              | Como grava                                                                 | Risco |
 |-----------------------|-----------------------------------------------------------------------------|-------|
 | **Registrar OS** (novo)| **Append** de linhas no fim, alinhado pelo cabeçalho (valores `RAW`)       | Baixo. Não reescreve nada. Se uma coluna de `OS` a `MECÂNICO` faltar no cabeçalho, a gravação é recusada com erro explícito. |
-| **Editar OS**         | Lê a aba inteira, altera uma linha e **reescreve a aba inteira** (apaga e escreve) | **Alto.** Escritas simultâneas, ou uma leitura durante a reescrita, podem perder ou ocultar dados. |
+| **Editar OS**         | Localiza o **nº real da linha** na planilha, confere se ela continua igual à de quando a edição foi aberta e grava **só as células alteradas** (mais `EDITADO_POR` e `DATA_EDICAO`) numa única chamada | Baixo. Se outra pessoa alterou a mesma linha, a edição é recusada e nada é gravado. Resta uma janela de milissegundos entre a conferência e a gravação. |
 
 ---
 
