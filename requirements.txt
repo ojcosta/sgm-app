@@ -1,5 +1,11 @@
+# Dependências do SGMA.
+# gspread: o st-gsheets-connection exige >=5.8,<6; o código usa append_rows/update_cell (API 5.x).
+# TODO: depois de testar, rode `pip freeze` no ambiente que funciona e fixe cada linha com ==
+# (sem fixar, cada deploy instala a versão mais nova e o app pode quebrar sem você mudar nada).
 streamlit
 pandas
+altair
 st-gsheets-connection
+gspread>=5.8,<6
 reportlab
 bcrypt

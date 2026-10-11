@@ -1,1 +1,11 @@
+# Segredos — NUNCA versionar
 .streamlit/secrets.toml
+.env
+*service-account*.json
+*credentials*.json
+
+# Ambientes e caches do Python
+.venv/
+venv/
+__pycache__/
+*.pyc

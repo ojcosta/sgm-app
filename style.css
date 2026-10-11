@@ -1,0 +1,200 @@
+/* 1. Reset Básico e Tipografia */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    background-color: #f8f9fa;
+    color: #212529; /* Alto contraste para acessibilidade */
+}
+
+/* 2. Variáveis de Cores (Identidade Visual Consistente) */
+:root {
+    --primary-color: #0d3b66; /* Azul escuro */
+    --accent-color: #ee9b00; /* Laranja para botões/destaques */
+    --bg-light: #ffffff;
+    --text-light: #ffffff;
+}
+
+/* 3. Cabeçalho (Uso de Flexbox) */
+header {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 5%;
+}
+
+header .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+nav a {
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem;
+    transition: color 0.3s;
+}
+
+/* Acessibilidade: Destaque visual ao focar com teclado */
+nav a:hover, nav a:focus {
+    color: var(--accent-color);
+    outline: 2px solid var(--accent-color);
+    border-radius: 4px;
+}
+
+/* 4. Layout Principal */
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 5%;
+}
+
+.hero {
+    text-align: center;
+    background-color: var(--bg-light);
+    padding: 4rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+}
+
+.hero h1 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+/* 5. Uso de CSS Grid (Layout principal e lista de serviços) */
+.layout-principal {
+    display: grid;
+    grid-template-columns: 3fr 1fr; /* Aside ocupa 25% do espaço */
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.servicos-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    list-style: none;
+    margin-top: 1.5rem;
+}
+
+.servicos-lista li {
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.servicos-lista img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+/* 6. Aside */
+aside {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    padding: 2rem;
+    border-radius: 8px;
+    height: fit-content;
+}
+
+aside h3 {
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+/* 7. Formulários e Acessibilidade */
+#contato {
+    background-color: var(--bg-light);
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+input, select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* Estado visual claro para usuários navegando por teclado */
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 59, 102, 0.2);
+}
+
+button {
+    background-color: var(--accent-color);
+    color: #000;
+    font-weight: bold;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+button:hover, button:focus {
+    background-color: #d68a00;
+}
+
+/* 8. Rodapé */
+footer {
+    background-color: #212529;
+    color: var(--text-light);
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 3rem;
+}
+
+/* 9. Responsividade (Media Queries) */
+@media (max-width: 850px) {
+    .layout-principal {
+        grid-template-columns: 1fr; /* Aside e Seção ficam em uma única coluna */
+    }
+    
+    header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    
+    nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}

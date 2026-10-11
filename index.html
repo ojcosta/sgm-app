@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGM Automotiva - Especialistas em Mecânica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Cabeçalho e Navegação -->
+    <header>
+        <div class="logo">SGM Automotiva</div>
+        <nav aria-label="Navegação principal">
+            <ul>
+                <li><a href="#sobre">Sobre Nós</a></li>
+                <li><a href="#servicos">Serviços</a></li>
+                <li><a href="#contato">Agendamento</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Seção Hero com Article -->
+        <section id="sobre" class="hero">
+            <article>
+                <h1>Gerenciamento e Manutenção Automotiva de Excelência</h1>
+                <p>Tecnologia e precisão para garantir a segurança e o desempenho do seu veículo.</p>
+            </article>
+        </section>
+
+        <!-- Container para Grid Layout -->
+        <div class="layout-principal">
+            <section id="servicos">
+                <h2>Nossos Serviços</h2>
+                <ul class="servicos-lista">
+                    <li>
+                        <img src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=400&q=80" alt="Mecânico ajustando motor do carro com ferramentas especializadas">
+                        <h3>Revisão Completa</h3>
+                        <p>Análise detalhada de todos os componentes vitais do seu veículo.</p>
+                    </li>
+                    <li>
+                        <img src="https://images.unsplash.com/photo-1632823462943-42e34279c656?auto=format&fit=crop&w=400&q=80" alt="Equipamento de diagnóstico automotivo conectado ao painel exibindo dados da injeção eletrônica">
+                        <h3>Diagnóstico Eletrônico</h3>
+                        <p>Leitura de parâmetros com scanners de última geração.</p>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Elemento Aside para informações complementares -->
+            <aside>
+                <h3>Horário de Atendimento</h3>
+                <p><strong>Segunda a Quinta:</strong><br> 07:00 - 17:00</p>
+                <p><strong>Sexta-feira:</strong><br> 07:00 - 16:00</p>
+            </aside>
+        </div>
+
+        <!-- Formulário Acessível -->
+        <section id="contato">
+            <h2>Agende uma Revisão</h2>
+            <form action="#" method="POST">
+                <div class="form-group">
+                    <label for="nome">Nome Completo:</label>
+                    <input type="text" id="nome" name="nome" required aria-required="true" placeholder="Digite seu nome">
+                </div>
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email" name="email" required aria-required="true" placeholder="exemplo@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="servico">Serviço de Interesse:</label>
+                    <select id="servico" name="servico" required aria-required="true">
+                        <option value="">Selecione uma opção...</option>
+                        <option value="revisao">Revisão Completa</option>
+                        <option value="eletrica">Diagnóstico Eletrônico</option>
+                        <option value="suspensao">Suspensão e Freios</option>
+                    </select>
+                </div>
+                <button type="submit">Enviar Agendamento</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Rodapé -->
+    <footer>
+        <p>&copy; 2026 SGM Automotiva. Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>
