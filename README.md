@@ -6,7 +6,7 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-red?style=flat-square&logo=streamlit)
 ![Google Sheets](https://img.shields.io/badge/Database-Google%20Sheets-green?style=flat-square&logo=googlesheets)
 <!-- Keep this badge in sync with APP_VERSAO in app.py -->
-![Version](https://img.shields.io/badge/Version-1.1.3--beta-orange?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.2--beta-orange?style=flat-square)
 
 ---
 
