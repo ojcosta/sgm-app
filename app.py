@@ -1,5 +1,7 @@
+import re
 import streamlit as st
 import pandas as pd
+import gspread
 import altair as alt
 from datetime import datetime, date
 
@@ -48,7 +50,7 @@ def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> tuple[bool, s
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.1.1"
+APP_VERSAO = "1.1.3"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
@@ -66,31 +68,58 @@ COLUNAS = [
 ]
 
 WORKSHEET_SOLICITACOES = "CADASTROS"
+WORKSHEET_SEQUENCIA    = "SEQUENCIA"   # aba auxiliar: reserva de números de OS (ver reservar_numero_os)
 
-def carregar_dados() -> pd.DataFrame:
-    """Lê os dados do Google Sheets. Erros são exibidos ao usuário."""
+class FalhaLeituraSheets(Exception):
+    """A leitura da planilha falhou. Em caminhos de ESCRITA isto deve abortar a operação."""
+
+
+def _normalizar_colunas(dados: pd.DataFrame) -> pd.DataFrame:
+    for col in COLUNAS:
+        if col not in dados.columns:
+            if col in ('DEFEITO', 'SERVIÇO EXECUTADO'):
+                dados[col] = "NÃO INFORMADO"
+            elif col in ('EDITADO_POR', 'DATA_EDICAO'):
+                dados[col] = ""
+            else:
+                dados[col] = None
+    return dados[COLUNAS]
+
+
+def carregar_dados_estrito() -> pd.DataFrame:
+    """
+    Para caminhos de ESCRITA. Se a leitura falhar, levanta FalhaLeituraSheets
+    em vez de devolver um DataFrame vazio — um vazio "de mentira" seguido de
+    conn.update() sobrescreve a planilha inteira e apaga o histórico.
+    """
     try:
         dados = conn.read(ttl=0)
-
-        if dados is None or dados.empty:
-            return pd.DataFrame(columns=COLUNAS)
-
-        for col in COLUNAS:
-            if col not in dados.columns:
-                if col == 'DEFEITO':
-                    dados[col] = "NÃO INFORMADO"
-                elif col == 'SERVIÇO EXECUTADO':
-                    dados[col] = "NÃO INFORMADO"
-                elif col in ('EDITADO_POR', 'DATA_EDICAO'):
-                    dados[col] = ""
-                else:
-                    dados[col] = None
-
-        return dados[COLUNAS]
-
     except Exception as e:
+        raise FalhaLeituraSheets(f"Falha ao ler a planilha: {e}") from e
+
+    if dados is None:
+        raise FalhaLeituraSheets("A leitura da planilha retornou None.")
+    if dados.empty:
+        return pd.DataFrame(columns=COLUNAS)
+    return _normalizar_colunas(dados)
+
+
+def carregar_dados() -> pd.DataFrame:
+    """Para EXIBIÇÃO. Erros são mostrados ao usuário. Nunca use o resultado para gravar."""
+    try:
+        return carregar_dados_estrito()
+    except FalhaLeituraSheets as e:
         st.error(f"⚠️ Erro ao carregar dados do Google Sheets: {e}")
         return pd.DataFrame(columns=COLUNAS)
+
+
+def exigir_planilha_nao_encolheu(df_atual: pd.DataFrame, df_visto: pd.DataFrame) -> None:
+    """Defesa extra antes de qualquer conn.update(): nunca gravar menos linhas do que o usuário viu."""
+    if len(df_atual) < len(df_visto):
+        raise FalhaLeituraSheets(
+            f"A planilha tem {len(df_atual)} linha(s) agora, mas {len(df_visto)} foram "
+            f"exibidas nesta sessão. Gravação abortada para evitar perda de dados."
+        )
 
 
 def carregar_solicitacoes() -> pd.DataFrame:
@@ -105,15 +134,136 @@ def carregar_solicitacoes() -> pd.DataFrame:
         return pd.DataFrame(columns=["NOME", "TELEFONE", "PLACA", "DEFEITO RELATADO", "DATA DA SOLICITAÇÃO", "STATUS"])
 
 
-def calcular_proxima_os(dados: pd.DataFrame) -> int:
-    """Calcula o número da próxima OS com base nos dados atuais."""
-    try:
-        if not dados.empty:
-            ids_num = pd.to_numeric(dados['OS'], errors='coerce').dropna()
-            return int(ids_num.max() + 1) if not ids_num.empty else 1
+def estimar_proxima_os(dados: pd.DataFrame) -> int:
+    """
+    SÓ PARA EXIBIÇÃO. O número definitivo vem de reservar_numero_os().
+    Pode divergir do definitivo (outro usuário reservando, buracos na sequência).
+    """
+    if dados.empty:
         return 1
+    ids_num = pd.to_numeric(dados['OS'], errors='coerce').dropna()
+    return int(ids_num.max() + 1) if not ids_num.empty else 1
+
+
+# ---------------------------------------------------------------------------
+# GRAVAÇÃO SEGURA DE NOVAS OS (append + número reservado)
+# ---------------------------------------------------------------------------
+class ErroGravacaoOS(Exception):
+    """Falha ao reservar número ou anexar a OS. Nada foi sobrescrito."""
+
+
+@st.cache_resource(show_spinner=False)
+def _planilha_gspread():
+    """Planilha aberta com gspread, usando as MESMAS credenciais do st.connection."""
+    cfg = dict(st.secrets["connections"]["gsheets"])
+    url = cfg.pop("spreadsheet")
+    cfg.pop("worksheet", None)
+    return gspread.service_account_from_dict(cfg).open_by_url(url)
+
+
+def _linha_do_append(resposta: dict) -> int:
+    """Extrai o nº da linha onde o Sheets gravou o append (ex.: "'SEQUENCIA'!A5:C5" -> 5)."""
+    try:
+        faixa = resposta["updates"]["updatedRange"]
+        return int(re.search(r"!\$?[A-Z]+(\d+)", faixa).group(1))
+    except Exception as e:
+        raise ErroGravacaoOS(f"Resposta inesperada do Google Sheets no append: {resposta!r}") from e
+
+
+def _valor_celula(v):
+    """Converte para tipos simples; None/NaN viram vazio."""
+    if v is None:
+        return ""
+    try:
+        if pd.isna(v):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    if hasattr(v, "item"):          # tipos numpy -> Python
+        v = v.item()
+    return v
+
+
+def reservar_numero_os(usuario: str) -> int:
+    """
+    Número de OS único, sem corrida: cada reserva é um APPEND na aba SEQUENCIA e o
+    Google Sheets devolve a linha atribuída — que é distinta para cada chamada.
+        A1 = cabeçalho | A2 = semente (último nº de OS já usado) | linha N>=3 = reserva
+        nº da OS = semente + (N - 2)
+    Efeito colateral aceito: se o salvamento falhar depois da reserva, o número fica
+    "queimado" (buraco na sequência).
+    """
+    try:
+        ws = _planilha_gspread().worksheet(WORKSHEET_SEQUENCIA)
+    except gspread.WorksheetNotFound as e:
+        raise ErroGravacaoOS(
+            f"Aba '{WORKSHEET_SEQUENCIA}' não existe na planilha. Crie-a: A1='OS', "
+            f"B1='RESERVADO_EM', C1='RESERVADO_POR' e, em A2, o último nº de OS já usado."
+        ) from e
+
+    bruto = ws.acell("A2").value
+    try:
+        semente = int(float(str(bruto).strip().replace(",", ".")))
+    except (TypeError, ValueError) as e:
+        raise ErroGravacaoOS(f"Semente inválida em {WORKSHEET_SEQUENCIA}!A2: {bruto!r}") from e
+
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    resposta = ws.append_rows([["", agora, usuario]], value_input_option="RAW", table_range="A1")
+    linha = _linha_do_append(resposta)
+    if linha < 3:
+        raise ErroGravacaoOS(f"Reserva gravada em linha inesperada ({linha}) — verifique a aba {WORKSHEET_SEQUENCIA}.")
+
+    os_num = semente + (linha - 2)
+    try:  # auditoria (best effort): escreve o nº na linha reservada
+        ws.update_cell(linha, 1, os_num)
     except Exception:
-        return len(dados) + 1
+        pass
+    return os_num
+
+
+def _qtd_linhas_da_os(ws, col_os: int, os_num: int) -> int:
+    n = 0
+    for v in ws.col_values(col_os)[1:]:
+        try:
+            if int(float(str(v).replace(",", "."))) == os_num:
+                n += 1
+        except ValueError:
+            continue
+    return n
+
+
+def anexar_os(os_num: int, registros: list, reutilizando: bool = False) -> int:
+    """
+    Acrescenta as linhas da OS no FIM da primeira aba (append) — nunca reescreve a planilha.
+    Alinha os valores pelo cabeçalho da planilha. Devolve a qtd de linhas da OS confirmadas.
+    reutilizando=True: número reservado numa tentativa anterior que pode ter gravado sem confirmar.
+    """
+    ws = _planilha_gspread().get_worksheet(0)
+    cabecalho = ws.row_values(1)
+
+    faltando = [c for c in COLUNAS if c not in cabecalho and c not in ("EDITADO_POR", "DATA_EDICAO")]
+    if faltando:
+        raise ErroGravacaoOS(f"Colunas ausentes no cabeçalho da planilha: {faltando}")
+    col_os = cabecalho.index("OS") + 1
+
+    ja_existem = _qtd_linhas_da_os(ws, col_os, os_num)
+    if ja_existem:
+        if reutilizando and ja_existem == len(registros):
+            return ja_existem   # tentativa anterior já gravou; não duplica
+        raise ErroGravacaoOS(
+            f"A OS {os_num} já existe na planilha ({ja_existem} linha(s)). Sequência dessincronizada "
+            f"ou gravação anterior divergente — confira o histórico antes de tentar de novo."
+        )
+
+    linhas = [[_valor_celula({**r, "OS": os_num}.get(col, "")) for col in cabecalho] for r in registros]
+    ws.append_rows(linhas, value_input_option="RAW", table_range="A1")
+
+    confirmadas = _qtd_linhas_da_os(ws, col_os, os_num)
+    if confirmadas != len(registros):
+        raise ErroGravacaoOS(
+            f"Confirmação falhou: esperado {len(registros)} linha(s) da OS {os_num}, encontrado {confirmadas}."
+        )
+    return confirmadas
 
 
 def diagnosticar_qualidade_dados(df: pd.DataFrame) -> dict:
@@ -751,7 +901,7 @@ if autenticacao():
 
         # Número da próxima OS — estimativa para exibição
         # O número definitivo é recalculado no momento do salvamento
-        proxima_os = calcular_proxima_os(df)
+        proxima_os = estimar_proxima_os(df)
         st.info(f"📌 ORDEM DE SERVIÇO ESTIMADA: **{proxima_os}** *(confirmada ao salvar)*")
 
         travado = len(st.session_state.lista_servicos_temp) > 0
@@ -833,6 +983,7 @@ if autenticacao():
                     'PAGAMENTO (R$)':    pagamento_item,
                     'MECÂNICO':          responsavel_os,
                 })
+                st.session_state.pop("os_reservada", None)
                 st.toast("✅ Serviço adicionado!")
                 st.rerun()
 
@@ -860,6 +1011,7 @@ if autenticacao():
                 if st.button("🗑️ DESCARTAR OS", use_container_width=True):
                     st.session_state.lista_servicos_temp = []
                     st.session_state.pop("confirmar_salvar", None)
+                    st.session_state.pop("os_reservada", None)
                     st.rerun()
 
             # Bloco de confirmação — aparece abaixo dos botões, fora de qualquer coluna
@@ -871,34 +1023,25 @@ if autenticacao():
                     if st.button("✅ SIM, SALVAR", type="primary", use_container_width=True):
                         with st.status("📦 ENVIANDO PARA GOOGLE SHEETS...", expanded=True) as status:
                             try:
-                                df_nuvem = carregar_dados()
-                                os_definitiva = calcular_proxima_os(df_nuvem)
-                                df_temp = pd.DataFrame(st.session_state.lista_servicos_temp)
-                                df_temp['OS'] = os_definitiva
-                                df_final = pd.concat([df_nuvem, df_temp], ignore_index=True)
-                                conn.update(
-                                    spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"],
-                                    data=df_final
-                                )
+                                registros    = list(st.session_state.lista_servicos_temp)
+                                os_definitiva = st.session_state.get("os_reservada")
+                                reutilizando  = os_definitiva is not None
+                                if not reutilizando:
+                                    os_definitiva = reservar_numero_os(nome)
+                                    st.session_state.os_reservada = os_definitiva
 
-                                # ── Verificação pós-salvamento ──────────────────────────
-                                df_verificacao = carregar_dados()
-                                duplicadas = pd.to_numeric(df_verificacao['OS'], errors='coerce')
-                                duplicadas = duplicadas[duplicadas == os_definitiva]
-                                if len(duplicadas) > len(df_temp):
-                                    st.warning(
-                                        f"⚠️ Atenção: a OS {os_definitiva} pode estar duplicada. "
-                                        f"Verifique o histórico antes de continuar."
-                                    )
-                                    status.update(label="⚠️ OS salva com possível duplicação.", state="error")
-                                else:
-                                    status.update(label="✅ OS SALVA COM SUCESSO!", state="complete", expanded=False)
-                                    st.session_state.lista_servicos_temp = []
-                                    st.session_state.confirmar_salvar    = False
-                                    st.session_state.os_recém_salva      = os_definitiva
-                                    st.session_state.df_os_recém_salva   = df_temp.to_dict("records")
-                                    st.balloons()
-                                    st.rerun()
+                                anexar_os(os_definitiva, registros, reutilizando)
+
+                                df_temp = pd.DataFrame(registros)
+                                df_temp['OS'] = os_definitiva
+                                status.update(label="✅ OS SALVA COM SUCESSO!", state="complete", expanded=False)
+                                st.session_state.lista_servicos_temp = []
+                                st.session_state.confirmar_salvar    = False
+                                st.session_state.pop("os_reservada", None)
+                                st.session_state.os_recém_salva      = os_definitiva
+                                st.session_state.df_os_recém_salva   = df_temp.to_dict("records")
+                                st.balloons()
+                                st.rerun()
 
                             except Exception as e:
                                 st.error(f"❌ Erro ao salvar: {e}")
@@ -1054,7 +1197,8 @@ if autenticacao():
                             if st.button("✅ SIM, ALTERAR", use_container_width=True, key="btn_sim_edit"):
                                 with st.status("📦 ATUALIZANDO NO GOOGLE SHEETS...", expanded=True) as s_edit:
                                     try:
-                                        df_nuvem = carregar_dados()
+                                        df_nuvem = carregar_dados_estrito()
+                                        exigir_planilha_nao_encolheu(df_nuvem, df)
                                         agora    = datetime.now().strftime("%d/%m/%Y %H:%M")
 
                                         df_nuvem.loc[idx_escolhido, 'DATA']              = str(e_data)
