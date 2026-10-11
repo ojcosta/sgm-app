@@ -50,7 +50,7 @@ def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> tuple[bool, s
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "1.1.3"
+APP_VERSAO = "0.9.1"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
