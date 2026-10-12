@@ -4,6 +4,20 @@ import pandas as pd
 import gspread
 import altair as alt
 from datetime import datetime, date
+from zoneinfo import ZoneInfo
+
+# O servidor do Streamlit Cloud roda em UTC (3h à frente de Brasília). datetime.now()/date.today() dariam
+# hora errada e, depois das 21h, a data do dia seguinte. Use SEMPRE agora()/hoje().
+FUSO = ZoneInfo("America/Sao_Paulo")
+
+
+def agora() -> datetime:
+    """Data e hora atuais de Brasília (sem tzinfo, para comparar com datas lidas da planilha)."""
+    return datetime.now(FUSO).replace(tzinfo=None)
+
+
+def hoje() -> date:
+    return agora().date()
 
 # ⚠️ Antes de alterar a aba "CADASTROS" (nome, colunas, valores de STATUS),
 # leia SCHEMA.md — essa estrutura é compartilhada com o repositório
@@ -50,7 +64,7 @@ def _verificar_senha(senha_digitada: str, hash_armazenado: str) -> tuple[bool, s
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÕES INICIAIS
 # ---------------------------------------------------------------------------
-APP_VERSAO = "0.9.1"
+APP_VERSAO = "0.9.5"
 
 st.set_page_config(page_title="SGMA", layout="wide", page_icon="🚘")
 
@@ -207,8 +221,8 @@ def reservar_numero_os(usuario: str) -> int:
     except (TypeError, ValueError) as e:
         raise ErroGravacaoOS(f"Semente inválida em {WORKSHEET_SEQUENCIA}!A2: {bruto!r}") from e
 
-    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    resposta = ws.append_rows([["", agora, usuario]], value_input_option="RAW", table_range="A1")
+    carimbo = agora().strftime("%d/%m/%Y %H:%M:%S")
+    resposta = ws.append_rows([["", carimbo, usuario]], value_input_option="RAW", table_range="A1")
     linha = _linha_do_append(resposta)
     if linha < 3:
         raise ErroGravacaoOS(f"Reserva gravada em linha inesperada ({linha}) — verifique a aba {WORKSHEET_SEQUENCIA}.")
@@ -274,6 +288,16 @@ def _txt(v) -> str:
     """Texto de uma célula para exibir em campos; vazio/NaN viram ''. (str(NaN) daria 'nan'.)"""
     v = _valor_celula(v)
     return "" if v == "" else str(v)
+
+
+def _txt_numero(v) -> str:
+    """Telefone/ano que a planilha guarda como número: sem '.0' (21989119085.0 -> '21989119085'). Vazio/NaN -> '—'."""
+    v = _valor_celula(v)
+    if v == "":
+        return "—"
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)
+    return str(v)
 
 
 def _num_float(v, padrao: float = 0.0) -> float:
@@ -554,8 +578,8 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
             v = srv.get(c, "")
             return str(v) if pd.notna(v) and str(v).strip() not in ("", "nan") else "—"
 
-        custo = pd.to_numeric(srv.get('CUSTO (R$)', 0), errors='coerce') or 0.0
-        pago  = pd.to_numeric(srv.get('PAGAMENTO (R$)', 0), errors='coerce') or 0.0
+        custo = _num_float(srv.get('CUSTO (R$)'))
+        pago  = _num_float(srv.get('PAGAMENTO (R$)'))
         total_custo += custo
         total_pago  += pago
 
@@ -608,7 +632,7 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
     story.append(HRFlowable(width="100%", thickness=0.5,
                              color=colors.HexColor("#cccccc"), spaceAfter=4))
     story.append(Paragraph(
-        f"SGM Automotiva · OS Nº {num_os} · Emitido em {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+        f"SGM Automotiva · OS Nº {num_os} · Emitido em {agora().strftime('%d/%m/%Y %H:%M')}",
         ParagraphStyle("rodape", fontSize=7, fontName="Helvetica",
                         textColor=colors.HexColor("#999999"), alignment=TA_CENTER)
     ))
@@ -1010,14 +1034,14 @@ if autenticacao():
 
         col1, col2 = st.columns(2)
         with col1:
-            data_input        = st.date_input("DATA DO SERVIÇO", datetime.now(), disabled=travado)
+            data_input        = st.date_input("DATA DO SERVIÇO", hoje(), disabled=travado)
             marca_input       = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
             modelo_input      = st.text_input("MODELO", disabled=travado, key="modelo")
             km_input          = st.number_input("KM ATUAL", min_value=0, step=1, format="%d", disabled=travado, key="km")
         with col2:
             proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado, key="prop")
             placa_input        = st.text_input("PLACA", disabled=travado, key="placa").upper()
-            ano_input          = st.number_input("ANO DE FABRICAÇÃO", min_value=1910, max_value=datetime.now().year + 1, step=1, format="%d", disabled=travado, key="ano")
+            ano_input          = st.number_input("ANO DE FABRICAÇÃO", min_value=1910, max_value=hoje().year + 1, step=1, format="%d", disabled=travado, key="ano")
             chassi_input       = st.text_input("CHASSI", disabled=travado, key="chassi").upper()
 
         st.divider()
@@ -1246,10 +1270,10 @@ if autenticacao():
                         st.caption(f"📝 Última edição por **{row['EDITADO_POR']}** em {row['DATA_EDICAO']}")
 
                     dt_ini   = pd.to_datetime(row['DATA'], errors='coerce')
-                    data_ini = dt_ini.date() if pd.notna(dt_ini) else date.today()
+                    data_ini = dt_ini.date() if pd.notna(dt_ini) else hoje()
                     marca_ini = row['MARCA'] if row['MARCA'] in LISTA_MARCA else LISTA_MARCA[-1]
                     km_ini    = _num_int(row['KM ATUAL'])
-                    ano_ini   = max(1910, min(_num_int(row['ANO DE FABRICAÇÃO'], 2000), datetime.now().year + 1))
+                    ano_ini   = max(1910, min(_num_int(row['ANO DE FABRICAÇÃO'], 2000), hoje().year + 1))
 
                     col1, col2 = st.columns(2)
                     with col1:
@@ -1262,7 +1286,7 @@ if autenticacao():
                         e_prop   = st.text_input("PROPRIETÁRIO", value=_txt(row['PROPRIETÁRIO']), key=f"e_prop_{sfx}")
                         e_placa  = st.text_input("PLACA", value=_txt(row['PLACA']), key=f"e_placa_{sfx}").upper()
                         e_ano    = st.number_input("ANO DE FABRICAÇÃO", min_value=1910,
-                                                   max_value=datetime.now().year + 1, step=1, value=ano_ini,
+                                                   max_value=hoje().year + 1, step=1, value=ano_ini,
                                                    format="%d", key=f"e_ano_{sfx}")
                         e_chassi = st.text_input("CHASSI", value=_txt(row['CHASSI']), key=f"e_chassi_{sfx}").upper()
 
@@ -1339,8 +1363,8 @@ if autenticacao():
                                     try:
                                         if not alteracoes:
                                             raise ErroGravacaoOS("Nenhum campo alterado.")
-                                        agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-                                        atualizar_linha_os(snap, {**alteracoes, 'EDITADO_POR': nome, 'DATA_EDICAO': agora})
+                                        carimbo = agora().strftime("%d/%m/%Y %H:%M")
+                                        atualizar_linha_os(snap, {**alteracoes, 'EDITADO_POR': nome, 'DATA_EDICAO': carimbo})
                                         s_edit.update(label="✅ OS ATUALIZADA COM SUCESSO!", state="complete", expanded=False)
                                         for chave in ("os_buscada", "confirmar_edicao", "edit_snap", "edit_snap_chave"):
                                             st.session_state.pop(chave, None)
@@ -1370,9 +1394,9 @@ if autenticacao():
             st.info("NENHUM REGISTRO ENCONTRADO.")
         else:
             # Mecânicos só veem as próprias OS
+            mecanico_nome = USUARIO_PARA_MECANICO.get(nome, nome.upper())
             if perfil == "mecanico":
-                mecanico_nome = USUARIO_PARA_MECANICO.get(nome, nome.upper())
-                df = df[df['MECÂNICO'].str.upper() == mecanico_nome]
+                df = df[df['MECÂNICO'].astype(str).str.upper() == mecanico_nome]
 
             df['DATA_DT'] = pd.to_datetime(df['DATA'], errors='coerce')
 
@@ -1383,13 +1407,13 @@ if autenticacao():
             with col_d1:
                 data_inicio = st.date_input("DATA INICIAL", value=date(2020, 1, 1))
             with col_d2:
-                data_fim = st.date_input("DATA FINAL", value=date.today())
+                data_fim = st.date_input("DATA FINAL", value=hoje())
 
             c_busca1, c_busca2, c_busca3 = st.columns([2, 1, 1])
             with c_busca1:
                 busca_placa_os = st.text_input("BUSCAR POR PLACA OU OS:").upper()
             with c_busca2:
-                opcoes_mec = ["Todos"] + LISTA_MECANICOS if perfil == "admin" else [nome.upper()]
+                opcoes_mec = ["Todos"] + LISTA_MECANICOS if perfil == "admin" else [mecanico_nome]   # nome REAL do mecânico, não o login
                 filtro_mec = st.selectbox("FILTRAR POR MECÂNICO", opcoes_mec)
 
             # Aplicar filtros
@@ -1404,7 +1428,7 @@ if autenticacao():
                     df_f['OS'].astype(str).str.contains(busca_placa_os)
                 ]
             if filtro_mec != "Todos":
-                df_f = df_f[df_f['MECÂNICO'] == filtro_mec]
+                df_f = df_f[df_f['MECÂNICO'].astype(str).str.upper() == filtro_mec.upper()]
 
             st.write("---")
 
@@ -1571,7 +1595,7 @@ if autenticacao():
 
                 for idx, row in pendentes.iterrows():
                     with st.expander(f"🔧 {row['NOME']} — Placa {row['PLACA']} — {row['DATA DA SOLICITAÇÃO']}"):
-                        st.write(f"**Telefone:** {row['TELEFONE']}")
+                        st.write(f"**Telefone:** {_txt_numero(row['TELEFONE'])}")
                         st.write(f"**Placa:** {row['PLACA']}")
                         st.write(f"**Defeito relatado pelo cliente:** {row['DEFEITO RELATADO']}")
 
