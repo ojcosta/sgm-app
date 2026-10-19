@@ -872,7 +872,7 @@ LISTA_MARCA = [
 # ---------------------------------------------------------------------------
 PERFIS = {
     "admin":    ["jonascosta"],
-    "mecanico: ["mecanico1"],
+    "mecanico: ["mecanico1"]
 }
 
 def perfil_do_usuario(usuario: str) -> str:
