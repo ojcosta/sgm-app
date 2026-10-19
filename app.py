@@ -855,7 +855,7 @@ DEFEITOS_POR_SERVICO = {
 }
 LISTA_SERVICOS = list(DEFEITOS_POR_SERVICO.keys())
 
-LISTA_MECANICOS = ["JONAS COSTA", "REBECA ALVES", "WILSON ALVES"]
+LISTA_MECANICOS = ["MECÂNICO1", "MECÂNICO2", "MECÂNICO3"]
 
 LISTA_MARCA = [
     "AUDI", "BMW", "BYD", "CHEVROLET", "CITROËN", "FIAT", "FORD",
@@ -872,7 +872,7 @@ LISTA_MARCA = [
 # ---------------------------------------------------------------------------
 PERFIS = {
     "admin":    ["jonascosta"],
-    "mecanico": ["rebecaalves", "wilsonalves", "pedrobueno", "davifraga", "fabiomoraes", "wagnerandrade", "oficina"],
+    "mecanico: ["mecanico1"],
 }
 
 def perfil_do_usuario(usuario: str) -> str:
@@ -884,13 +884,7 @@ def perfil_do_usuario(usuario: str) -> str:
 # Mapa username → nome real do mecânico (para filtro correto)
 USUARIO_PARA_MECANICO = {
     "jonascosta":   "JONAS COSTA",
-    "rebecaalves":  "REBECA ALVES",
-    "wilsonalves":  "WILSON ALVES",
-    "pedrobueno":   "PEDRO BUENO",
-    "davifraga":    "DAVI FRAGA",
-    "fabiomoraes":  "FABIO MORAES",
-    "wagnerandrade":"WAGNER ANDRADE",
-    "oficina":      "OFICINA",
+    "mecanico1":  "mecanico1",
 }
 
 def autenticacao() -> bool:
