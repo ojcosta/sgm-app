@@ -1035,7 +1035,7 @@ if autenticacao():
         with col2:
             proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado, key="prop")
             placa_input        = st.text_input("PLACA", disabled=travado, key="placa").upper()
-            ano_input          = st.number_input("ANO DE FABRICAÇÃO", min_value=1910, max_value=hoje().year + 1, step=1, format="%d", disabled=travado, key="ano")
+            ano_input          = st.number_input("ANO DE FABRICAÇÃO", min_value=2005, max_value=hoje().year + 1, step=1, format="%d", disabled=travado, key="ano")
             chassi_input       = st.text_input("CHASSI", disabled=travado, key="chassi").upper()
 
         st.divider()
