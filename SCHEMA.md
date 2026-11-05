@@ -30,7 +30,7 @@ A planilha tem **três abas com função definida**. Qualquer outra aba é ignor
 | `OS`                 | número da OS (vem da aba `SEQUENCIA`)                  |
 | `DATA`               | gravada como texto `AAAA-MM-DD` nas OS novas            |
 | `MARCA`              |                                                         |
-| `MODELO`             |                                                         |
+| `MODELO`             | não deve conter o combustível (ele tem coluna própria)  |
 | `KM ATUAL`           | numérico                                                |
 | `PROPRIETÁRIO`       |                                                         |
 | `PLACA`              |                                                         |
@@ -45,12 +45,19 @@ A planilha tem **três abas com função definida**. Qualquer outra aba é ignor
 | `MECÂNICO`           | deve coincidir com os nomes do app (`LISTA_MECANICOS`)  |
 | `EDITADO_POR`        | preenchida só ao editar uma OS                          |
 | `DATA_EDICAO`        | preenchida só ao editar uma OS                          |
+| `COMBUSTÍVEL`        | um de `LISTA_COMBUSTIVEL` no `app.py`: `GASOLINA`, `ETANOL`, `FLEX`, `DIESEL`, `GNV`, `ELÉTRICO`, `HÍBRIDO`, `OUTRO`. Obrigatório em OS novas; **vazio nas OS anteriores à coluna** (isso é esperado). Fica no fim do cabeçalho de propósito: nenhuma coluna existente muda de posição |
+
+Observações sobre `COMBUSTÍVEL`:
+- É atributo do veículo, mas, como `MARCA` e `MODELO`, é gravado em todas as linhas da OS.
+- Se alguém digitar à mão na planilha um valor fora da lista, o app mostra o campo vazio na edição
+  e **não sobrescreve** a célula, a menos que o admin escolha um valor.
+- O `sgmaforms` não escreve nesta aba, então não é afetado.
 
 ### Como o app grava nesta aba
 
 | Operação              | Como grava                                                                 | Risco |
 |-----------------------|-----------------------------------------------------------------------------|-------|
-| **Registrar OS** (novo)| **Append** de linhas no fim, alinhado pelo cabeçalho (valores `RAW`)       | Baixo. Não reescreve nada. Se uma coluna de `OS` a `MECÂNICO` faltar no cabeçalho, a gravação é recusada com erro explícito. |
+| **Registrar OS** (novo)| **Append** de linhas no fim, alinhado pelo cabeçalho (valores `RAW`)       | Baixo. Não reescreve nada. Se qualquer coluna de `OS` a `MECÂNICO`, ou `COMBUSTÍVEL`, faltar no cabeçalho, a gravação é recusada com erro explícito. |
 | **Editar OS**         | Localiza o **nº real da linha** na planilha, confere se ela continua igual à de quando a edição foi aberta e grava **só as células alteradas** (mais `EDITADO_POR` e `DATA_EDICAO`) numa única chamada | Baixo. Se outra pessoa alterou a mesma linha, a edição é recusada e nada é gravado. Resta uma janela de milissegundos entre a conferência e a gravação. |
 
 ---
@@ -99,9 +106,11 @@ Regras (quebrar qualquer uma gera números repetidos ou erro ao salvar):
 O `sgm-app` lê por **nome** de coluna, então a ordem não importa e colunas extras são toleradas.
 Remover ou renomear qualquer coluna usada acima quebra o painel.
 
+`CADASTROS` **não tem** coluna de combustível: o campo existe só na OS, preenchido na oficina.
+
 Observações sobre os dados reais:
 - `TELEFONE` e `ANO` são gravados como número. Ao ler, o pandas os converte para decimal
-  (`21989119085.0`, `2009.0`), o que aparece assim na tela se não houver tratamento.
+  (`21989119085.0`, `2009.0`). O `sgm-app` trata o telefone na exibição (`_txt_numero`); o `ANO` não é usado.
 - O `sgmaforms` não valida o formato da placa (já existe uma placa fora do padrão brasileiro na aba).
 
 ### Valores válidos de `STATUS`
@@ -148,5 +157,17 @@ Não há proteção contra envios em massa (spam) documentada.
 
 1. Decida a mudança nos dois repositórios ao mesmo tempo, não em sessões separadas.
 2. Atualize este arquivo.
-3. Teste o fluxo completo numa **cópia** da planilha:
+3. **Ordem de deploy ao ADICIONAR coluna na aba principal:** primeiro o cabeçalho na planilha,
+   depois o código. Coluna a mais na planilha não quebra a versão antiga do app; código que exige
+   uma coluna que ainda não existe recusa todas as gravações de OS nova.
+   **Renomear ou remover** coluna não tem essa folga: o app antigo quebra no ato.
+4. Teste o fluxo completo numa **cópia** da planilha:
    formulário → aba `CADASTROS` → painel admin → aceitar/recusar → registrar OS (append + `SEQUENCIA`) → editar OS.
+
+---
+
+## Histórico de mudanças na estrutura
+
+| Data       | Mudança |
+|------------|---------|
+| 2026-11-05 | Coluna `COMBUSTÍVEL` adicionada ao fim da aba principal (obrigatória em OS novas; vazia nas antigas). |

@@ -2,11 +2,11 @@
 
 > A cloud-based workshop management app built with Python, Streamlit and Google Sheets.
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?style=flat-square&logo=python)
+![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-red?style=flat-square&logo=streamlit)
 ![Google Sheets](https://img.shields.io/badge/Database-Google%20Sheets-green?style=flat-square&logo=googlesheets)
 <!-- Keep this badge in sync with APP_VERSAO in app.py -->
-![Version](https://img.shields.io/badge/Version-0.9.5--beta-orange?style=flat-square)
+![Version](https://img.shields.io/badge/Version-0.9.5b--beta-orange?style=flat-square)
 
 ---
 
@@ -22,7 +22,7 @@ It is written entirely in Python with Streamlit and uses a Google Sheets spreads
 
 ## ✨ Features
 
-- 📝 **Service Order (OS) registration** — multi-service orders with vehicle data, responsible mechanic, defect, diagnosis, executed service, cost and payment received. New orders are appended to the spreadsheet and receive a unique OS number reserved in a dedicated tab.
+- 📝 **Service Order (OS) registration** — multi-service orders with vehicle data (brand, model, **fuel type**, mileage, plate, year, chassis), responsible mechanic, defect, diagnosis, executed service, cost and payment received. New orders are appended to the spreadsheet and receive a unique OS number reserved in a dedicated tab.
 - ✏️ **OS editing (admin)** — edit any line of an existing OS. Only the fields you actually changed are written, the editor and date of the last edit are recorded, and the edit is refused if someone else changed that row after you opened it.
 - 📥 **Client requests (admin)** — requests sent through the public companion form (`sgmaforms`) can be accepted or refused; accepting pre-fills the OS registration screen.
 - 🔍 **History & search** — filter by date range, mechanic, and plate or OS number.
@@ -37,8 +37,8 @@ It is written entirely in Python with Streamlit and uses a Google Sheets spreads
 | Layer | Technology |
 |---|---|
 | App / UI | [Streamlit](https://streamlit.io) |
-| Language | Python 3.12 |
-| Data store | Google Sheets (`st-gsheets-connection` for reads and full-tab updates, `gspread` for appends) |
+| Language | Python 3.11 (dev container); the app needs 3.9+ (`zoneinfo`) |
+| Data store | Google Sheets (`st-gsheets-connection` for reads and full-tab updates, `gspread` for appends and cell edits) |
 | Auth | Users in `st.secrets`, passwords hashed with `bcrypt` |
 | PDF | ReportLab |
 | Charts | Altair |
@@ -52,11 +52,13 @@ The app expects a Google Sheets file with these tabs. Details and rules are in [
 
 | Tab | Purpose |
 |---|---|
-| **First tab** (any name) | One row per service of each OS. Must have the exact header columns listed in `SCHEMA.md`. **It must be the first tab in the file.** |
+| **First tab** (any name) | One row per service of each OS. Must have the exact header columns listed in `SCHEMA.md`, including `COMBUSTÍVEL` (kept at the end of the header). Empty in rows created before that column existed. **It must be the first tab in the file.** |
 | `SEQUENCIA` | Reserves OS numbers. `A1` = `OS`, `B1` = `RESERVADO_EM`, `C1` = `RESERVADO_POR`; `A2` = last OS number already used. Never edit `A2`, sort, or delete rows afterwards. |
 | `CADASTROS` | Client requests written by the public form (`sgmaforms`). |
 
 Share the spreadsheet with the service account e-mail (`client_email`) as **Editor**.
+
+> When a release adds a column to the first tab, add the header in the spreadsheet **before** deploying the code. The new code refuses to save new orders until the header exists.
 
 ---
 
@@ -154,7 +156,7 @@ A separate Streamlit app (separate repository, deployment and service account) l
 - **Google Sheets is not a transactional database.** There is no referential integrity, no locking, and the Sheets API has request quotas. Every screen interaction triggers a read.
 - **Concurrent writes are only protected where noted.** Registering a new OS appends rows and reserves its number atomically. Editing an OS writes only the changed cells and checks that the row did not change since it was opened (a window of milliseconds remains between the check and the write). **Updating client requests (accept/refuse) still rewrites the whole `CADASTROS` tab** (clear, then write), so simultaneous updates, or a read during the rewrite, can lose or hide data.
 - **OS numbers can have gaps.** A number is reserved before saving; if saving fails, that number is not reused.
-- **PDF totals:** blank cost or payment cells in old rows can make the PDF totals show `nan` (known bug, not fixed yet).
+- **Old orders have no fuel type.** `COMBUSTÍVEL` is required on new orders only; rows created before the column existed stay empty until someone edits them.
 - **Login has no attempt limit.**
 - **Not multi-tenant.** Users, roles and mechanic lists are hardcoded in `app.py`; one deployment equals one workshop.
 - **Data privacy:** the app stores names, phone numbers and license plates of workshop clients. Using it in production implies LGPD obligations for the workshop.
@@ -164,8 +166,9 @@ A separate Streamlit app (separate repository, deployment and service account) l
 ## 🗺️ Roadmap
 
 - [x] Update only the changed cells in *Edit OS* (with conflict detection)
+- [x] Fuel type (`COMBUSTÍVEL`) on the vehicle data
+- [x] Fix `nan` totals in the PDF (blank cost/payment now count as 0)
 - [ ] Update only the changed row in *Client requests* (no more whole-tab rewrites)
-- [ ] Fix `nan` totals in the PDF
 - [ ] End-to-end validation of the `sgmaforms` → `CADASTROS` → admin flow
 - [ ] Link an accepted client request to the OS it generated
 - [ ] WhatsApp notification on OS completion
