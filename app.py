@@ -78,7 +78,8 @@ COLUNAS = [
     'PLACA', 'ANO DE FABRICAÇÃO', 'CHASSI', 'SERVIÇO', 'DEFEITO',
     'DIAGNÓSTICO', 'SERVIÇO EXECUTADO',
     'CUSTO (R$)', 'PAGAMENTO (R$)', 'MECÂNICO',
-    'EDITADO_POR', 'DATA_EDICAO'
+    'EDITADO_POR', 'DATA_EDICAO',
+    'COMBUSTÍVEL'   # no fim de propósito: nenhuma coluna existente muda de posição
 ]
 
 WORKSHEET_SOLICITACOES = "CADASTROS"
@@ -93,7 +94,7 @@ def _normalizar_colunas(dados: pd.DataFrame) -> pd.DataFrame:
         if col not in dados.columns:
             if col in ('DEFEITO', 'SERVIÇO EXECUTADO'):
                 dados[col] = "NÃO INFORMADO"
-            elif col in ('EDITADO_POR', 'DATA_EDICAO'):
+            elif col in ('EDITADO_POR', 'DATA_EDICAO', 'COMBUSTÍVEL'):
                 dados[col] = ""
             else:
                 dados[col] = None
@@ -537,7 +538,7 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
         ["PROPRIETÁRIO", val('PROPRIETÁRIO'), "PLACA", val('PLACA')],
         ["MARCA / MODELO", f"{val('MARCA')} {val('MODELO')}", "ANO", val('ANO DE FABRICAÇÃO', inteiro=True)],
         ["KM ATUAL", val('KM ATUAL', inteiro=True), "CHASSI", val('CHASSI')],
-        ["MECÂNICO", val('MECÂNICO'), "", ""],
+        ["MECÂNICO", val('MECÂNICO'), "COMBUSTÍVEL", val('COMBUSTÍVEL')],
     ]
 
     t_veiculo = Table(
@@ -554,7 +555,6 @@ def gerar_pdf_os(linhas_os: pd.DataFrame) -> bytes:
     ("TOPPADDING",    (0,0), (-1,-1), 5),
     ("BOTTOMPADDING", (0,0), (-1,-1), 5),
     ("LEFTPADDING",   (0,0), (-1,-1), 6),
-    ("SPAN",          (1,3), (3,3)),   # ← ADICIONAR: valor do mecânico ocupa colunas 1 a 3
 ]))
     story.append(t_veiculo)
     story.append(Spacer(1, 8))
@@ -857,6 +857,8 @@ LISTA_SERVICOS = list(DEFEITOS_POR_SERVICO.keys())
 
 LISTA_MECANICOS = ["MECÂNICO1", "MECÂNICO2", "MECÂNICO3"]
 
+LISTA_COMBUSTIVEL = ["GASOLINA", "ETANOL", "FLEX", "DIESEL", "GNV", "ELÉTRICO", "HÍBRIDO", "OUTRO"]
+
 LISTA_MARCA = [
     "AUDI", "BMW", "BYD", "CHEVROLET", "CITROËN", "FIAT", "FORD",
     "HONDA", "HYUNDAI", "INFINITI", "JAGUAR", "JEEP", "LEXUS", "MAZDA",
@@ -1031,6 +1033,8 @@ if autenticacao():
             data_input        = st.date_input("DATA DO SERVIÇO", hoje(), disabled=travado)
             marca_input       = st.selectbox("MARCA", LISTA_MARCA, disabled=travado)
             modelo_input      = st.text_input("MODELO", disabled=travado, key="modelo")
+            combustivel_input = st.selectbox("COMBUSTÍVEL", LISTA_COMBUSTIVEL, index=None,
+                                             placeholder="Selecione...", disabled=travado, key="combustivel")
             km_input          = st.number_input("KM ATUAL", min_value=0, step=1, format="%d", disabled=travado, key="km")
         with col2:
             proprietario_input = st.text_input("PROPRIETÁRIO", disabled=travado, key="prop")
@@ -1077,6 +1081,7 @@ if autenticacao():
             erros = []
             if not placa_input.strip():              erros.append("Placa")
             if not modelo_input.strip():             erros.append("Modelo")
+            if not combustivel_input:                erros.append("Combustível")
             if not diagnostico_item.strip():         erros.append("Diagnóstico do Mecânico")
             if not servico_executado_item.strip():   erros.append("Serviço Executado")
             if custo_item == 0 and pagamento_item == 0:
@@ -1090,6 +1095,7 @@ if autenticacao():
                     'DATA':              str(data_input),
                     'MARCA':             marca_input,
                     'MODELO':            modelo_input.strip(),
+                    'COMBUSTÍVEL':       combustivel_input,
                     'KM ATUAL':          km_input,
                     'PROPRIETÁRIO':      proprietario_input.strip(),
                     'PLACA':             placa_input.strip(),
@@ -1267,6 +1273,8 @@ if autenticacao():
                     data_ini = dt_ini.date() if pd.notna(dt_ini) else hoje()
                     marca_ini = row['MARCA'] if row['MARCA'] in LISTA_MARCA else LISTA_MARCA[-1]
                     km_ini    = _num_int(row['KM ATUAL'])
+                    comb_ini  = _txt(row['COMBUSTÍVEL'])
+                    comb_ini  = comb_ini if comb_ini in LISTA_COMBUSTIVEL else ""   # OS antigas: vazio
                     ano_ini   = max(1910, min(_num_int(row['ANO DE FABRICAÇÃO'], 2000), hoje().year + 1))
 
                     col1, col2 = st.columns(2)
@@ -1274,6 +1282,9 @@ if autenticacao():
                         e_data   = st.date_input("DATA DO SERVIÇO", value=data_ini, key=f"e_data_{sfx}")
                         e_marca  = st.selectbox("MARCA", LISTA_MARCA, index=LISTA_MARCA.index(marca_ini), key=f"e_marca_{sfx}")
                         e_modelo = st.text_input("MODELO", value=_txt(row['MODELO']), key=f"e_modelo_{sfx}")
+                        e_comb   = st.selectbox("COMBUSTÍVEL", LISTA_COMBUSTIVEL,
+                                                index=LISTA_COMBUSTIVEL.index(comb_ini) if comb_ini else None,
+                                                placeholder="Selecione...", key=f"e_comb_{sfx}")
                         e_km     = st.number_input("KM ATUAL", min_value=0, step=1, value=km_ini,
                                                    format="%d", key=f"e_km_{sfx}")
                     with col2:
@@ -1318,6 +1329,7 @@ if autenticacao():
                         'DATA':              (str(e_data),        str(data_ini)),
                         'MARCA':             (e_marca,            marca_ini),
                         'MODELO':            (e_modelo.strip(),   _txt(row['MODELO'])),
+                        'COMBUSTÍVEL':       (e_comb or "",       comb_ini),
                         'KM ATUAL':          (e_km,               km_ini),
                         'PROPRIETÁRIO':      (e_prop.strip(),     _txt(row['PROPRIETÁRIO'])),
                         'PLACA':             (e_placa.strip(),    _txt(row['PLACA'])),
@@ -1518,7 +1530,7 @@ if autenticacao():
             st.write("---")
 
             colunas_exibir = COLUNAS if perfil == "admin" else [
-                'OS', 'DATA', 'MARCA', 'MODELO', 'PLACA', 'SERVIÇO',
+                'OS', 'DATA', 'MARCA', 'MODELO', 'COMBUSTÍVEL', 'PLACA', 'SERVIÇO',
                 'DEFEITO', 'DIAGNÓSTICO', 'SERVIÇO EXECUTADO'
             ]
 
