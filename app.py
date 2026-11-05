@@ -708,7 +708,7 @@ DEFEITOS_POR_SERVICO = {
         "DIREÇÃO ELÉTRICA COM FALHA",
         "DIREÇÃO TRAVADA",
         "PUXANDO PARA DIREITA",
-        "PUXANDO PARA DIREITA",
+        "PUXANDO PARA ESQUERDA",
         "VAZAMENTO DE ÓLEO HIDRÁULICO",
         "VOLANTE COM FOLGA EXCESSIVA",
         "OUTROS",
@@ -781,7 +781,7 @@ DEFEITOS_POR_SERVICO = {
     ],
     "REVISÃO GERAL": [
         "PRÉ-VIAGEM",
-        "REVISÃO DE LANTERNAGEM"
+        "REVISÃO DE LANTERNAGEM",
         "REVISÃO PROGRAMADA (KM)",
         "TROCA DE FILTRO DE AR",
         "TROCA DE ÓLEO E FILTRO",
@@ -1646,7 +1646,7 @@ if autenticacao():
     elif escolha == "SOBRE O APP":
         st.subheader("📱 Sobre o SGMA")
         st.markdown(f"""
-        **Desenvolvedor:** Jonas Costa  
+        **Desenvolvido por:** Grupo DRYZ3R  
         **Versão:** {APP_VERSAO} - Beta
 
         O **SGMA** centraliza o registro de ordens de serviço, controle financeiro e histórico de atendimentos da sua oficina em um único lugar.
